@@ -43,3 +43,6 @@
 
     - name: Bootstrap ArgoCD apps
       ansible.builtin.include_tasks: tasks/argocd-bootstrap.yml
+
+    - name: Create Cloudflare secrets
+      ansible.builtin.include_tasks: tasks/cloudflare-secrets.yml
