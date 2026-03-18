@@ -1,0 +1,40 @@
+---
+- name: Configure repo credentials
+  kubernetes.core.k8s:
+    kubeconfig: "{{ kubeconfig }}"
+    state: present
+    resource_definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: repo-infra-k3s-contabo
+        namespace: argocd
+        labels:
+          argocd.argoproj.io/secret-type: repository
+      stringData:
+        type: git
+        url: git@github.com:yourdevops/infra-k3s-contabo.git
+        sshPrivateKey: "{{ vault_argocd_repo_private_key }}"
+
+- name: Apply root Application
+  kubernetes.core.k8s:
+    kubeconfig: "{{ kubeconfig }}"
+    state: present
+    resource_definition:
+      apiVersion: argoproj.io/v1alpha1
+      kind: Application
+      metadata:
+        name: root
+        namespace: argocd
+      spec:
+        project: default
+        source:
+          repoURL: git@github.com:yourdevops/infra-k3s-contabo.git
+          targetRevision: main
+          path: argocd/
+        destination:
+          server: https://kubernetes.default.svc
+        syncPolicy:
+          automated:
+            selfHeal: true
+            prune: true

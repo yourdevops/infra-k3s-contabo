@@ -1,0 +1,37 @@
+k3s_cluster:
+  children:
+    server:
+      hosts:
+        s01:
+          ansible_host: s01.yourdevops.me
+          ansible_user: admin
+        # s02:
+        #   ansible_host: s02.yourdevops.me
+        #   ansible_user: admin
+        # s03:
+        #   ansible_host: s03.yourdevops.me
+        #   ansible_user: admin
+    agent:
+      hosts: {}
+        # w01:
+        #   ansible_host: w01.yourdevops.me
+        #   ansible_user: admin
+        # w02:
+        #   ansible_host: w02.yourdevops.me
+        #   ansible_user: admin
+  vars:
+    ansible_python_interpreter: /opt/ansible-venv/bin/python
+    kubeconfig: /etc/rancher/k3s/k3s.yaml
+    domain: yourdevops.me
+    token: "{{ vault_k3s_token }}"
+    api_endpoint: "{{ hostvars[groups['server'][0]]['ansible_host'] }}"
+
+    server_config_yaml: |
+      disable:
+        - traefik
+        - servicelb
+      kubelet-arg:
+        - "node-status-update-frequency=60s"
+      kube-controller-manager-arg:
+        - "node-monitor-grace-period=5m"
+        - "terminated-pod-gc-threshold=10"

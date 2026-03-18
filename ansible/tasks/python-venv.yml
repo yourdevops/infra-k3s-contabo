@@ -1,0 +1,19 @@
+---
+- name: Install python3-venv
+  ansible.builtin.apt:
+    name: python3-venv
+    state: present
+    update_cache: true
+
+- name: Create Ansible venv
+  ansible.builtin.command:
+    cmd: python3 -m venv /opt/ansible-venv --system-site-packages
+    creates: /opt/ansible-venv/bin/python
+
+- name: Install Python packages in venv
+  ansible.builtin.pip:
+    name:
+      - kubernetes==35.0.0
+      - jsonpatch==1.33
+    state: present
+    virtualenv: /opt/ansible-venv

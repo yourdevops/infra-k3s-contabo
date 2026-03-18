@@ -1,0 +1,39 @@
+---
+- name: Check if Helm GPG key exists
+  ansible.builtin.stat:
+    path: /usr/share/keyrings/helm.gpg
+  register: helm_gpg_key
+
+- name: Install Helm GPG key
+  when: not helm_gpg_key.stat.exists
+  block:
+    - name: Download Helm signing key
+      ansible.builtin.get_url:
+        url: https://packages.buildkite.com/helm-linux/helm-debian/gpgkey
+        dest: /tmp/helm.asc
+        mode: "0644"
+
+    - name: Dearmor Helm GPG key
+      ansible.builtin.command:
+        cmd: gpg --dearmor -o /usr/share/keyrings/helm.gpg /tmp/helm.asc
+        creates: /usr/share/keyrings/helm.gpg
+
+    - name: Remove temporary key file
+      ansible.builtin.file:
+        path: /tmp/helm.asc
+        state: absent
+
+- name: Add Helm apt repository
+  ansible.builtin.deb822_repository:
+    name: helm-stable
+    types: deb
+    uris: https://packages.buildkite.com/helm-linux/helm-debian/any/
+    suites: any
+    components: main
+    signed_by: /usr/share/keyrings/helm.gpg
+
+- name: Install Helm
+  ansible.builtin.apt:
+    name: "helm={{ helm_version }}"
+    state: present
+    update_cache: true

@@ -1,0 +1,45 @@
+---
+- name: Bootstrap Python venv
+  hosts: all
+  become: true
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  tasks:
+    - name: Bootstrap Python venv
+      ansible.builtin.include_tasks: tasks/python-venv.yml
+
+- name: OS baseline
+  hosts: all
+  become: true
+  tasks:
+    - name: Configure OS baseline
+      ansible.builtin.include_tasks: tasks/os-baseline.yml
+
+- name: Deploy k3s cluster
+  ansible.builtin.import_playbook: k3s.orchestration.site
+
+- name: Bootstrap ArgoCD
+  hosts: server[0]
+  become: true
+  pre_tasks:
+    - name: Wait for CoreDNS to be available
+      kubernetes.core.k8s_info:
+        kubeconfig: "{{ kubeconfig }}"
+        kind: Deployment
+        namespace: kube-system
+        name: coredns
+        wait: true
+        wait_condition:
+          type: Available
+          status: "True"
+        wait_timeout: 120
+
+  tasks:
+    - name: Install Helm
+      ansible.builtin.include_tasks: tasks/helm.yml
+
+    - name: Install ArgoCD
+      ansible.builtin.include_tasks: tasks/argocd.yml
+
+    - name: Bootstrap ArgoCD apps
+      ansible.builtin.include_tasks: tasks/argocd-bootstrap.yml
