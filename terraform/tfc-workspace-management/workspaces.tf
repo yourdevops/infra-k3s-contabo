@@ -77,8 +77,8 @@ resource "tfe_workspace" "contabo" {
 
 }
 
-resource "tfe_workspace_remote_state_consumers" "contabo" {
-  workspace_id      = tfe_workspace.contabo.id
+resource "tfe_workspace_settings" "contabo" {
+  workspace_id              = tfe_workspace.contabo.id
   remote_state_consumer_ids = [tfe_workspace.cloudflare.id]
 }
 
