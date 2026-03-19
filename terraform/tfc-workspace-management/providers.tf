@@ -8,13 +8,13 @@ terraform {
     }
   }
 
-  cloud { 
-    
-    organization = "yourdevops" 
+  cloud {
 
-    workspaces { 
-      name = "tfc-workspace-management" 
-    } 
+    organization = "yourdevops"
+
+    workspaces {
+      name = "tfc-workspace-management"
+    }
   }
 }
 
