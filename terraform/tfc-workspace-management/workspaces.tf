@@ -74,6 +74,12 @@ resource "tfe_workspace" "contabo" {
     oauth_token_id = data.tfe_oauth_client.github.oauth_token_id
     branch         = "main"
   }
+
+}
+
+resource "tfe_workspace_remote_state_consumers" "contabo" {
+  workspace_id      = tfe_workspace.contabo.id
+  remote_state_consumer_ids = [tfe_workspace.cloudflare.id]
 }
 
 resource "tfe_variable" "contabo_oauth2_client_id" {
