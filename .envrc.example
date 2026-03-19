@@ -1,2 +1,1 @@
 export TF_TOKEN_app_terraform_io=""                                                                                                                       
-export CLOUDFLARE_API_TOKEN=""

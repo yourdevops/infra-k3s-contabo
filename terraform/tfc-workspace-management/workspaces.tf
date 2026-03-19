@@ -75,3 +75,55 @@ resource "tfe_workspace" "contabo" {
     branch         = "main"
   }
 }
+
+resource "tfe_variable" "contabo_oauth2_client_id" {
+  # Placeholder secret -- needs to be populated manually in TFC
+  workspace_id = tfe_workspace.contabo.id
+  key          = "CNTB_OAUTH2_CLIENT_ID"
+  value        = ""
+  category     = "env"
+  sensitive    = true
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
+
+resource "tfe_variable" "contabo_oauth2_client_secret" {
+  # Placeholder secret -- needs to be populated manually in TFC
+  workspace_id = tfe_workspace.contabo.id
+  key          = "CNTB_OAUTH2_CLIENT_SECRET"
+  value        = ""
+  category     = "env"
+  sensitive    = true
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
+
+resource "tfe_variable" "contabo_oauth2_user" {
+  # Placeholder secret -- needs to be populated manually in TFC
+  workspace_id = tfe_workspace.contabo.id
+  key          = "CNTB_OAUTH2_USER"
+  value        = ""
+  category     = "env"
+  sensitive    = true
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
+
+resource "tfe_variable" "contabo_oauth2_pass" {
+  # Placeholder secret -- needs to be populated manually in TFC
+  workspace_id = tfe_workspace.contabo.id
+  key          = "CNTB_OAUTH2_PASS"
+  value        = ""
+  category     = "env"
+  sensitive    = true
+
+  lifecycle {
+    ignore_changes = [value]
+  }
+}
