@@ -1,12 +1,7 @@
-variable "cloudflare_api_token" {
-  description = "Cloudflare API token (Zone:DNS:Edit, Account:Cloudflare Tunnel:Edit)"
-  type        = string
-  sensitive   = true
-}
-
 variable "cloudflare_account_id" {
   description = "Cloudflare account ID"
   type        = string
+  default     = "d2e4eeea00c697a04bd79a3b736f88de"
 }
 
 variable "domain" {

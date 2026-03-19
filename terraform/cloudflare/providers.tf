@@ -7,8 +7,16 @@ terraform {
       version = "~> 5"
     }
   }
+
+  cloud {
+    # 
+    organization = "yourdevops"
+    workspaces {
+      name = "cloudflare"
+    }
+  }
 }
 
 provider "cloudflare" {
-  api_token = var.cloudflare_api_token
+  # CLOUDFLARE_API_TOKEN variable has to be supplied to the executor
 }
