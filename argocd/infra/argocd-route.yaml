@@ -8,9 +8,9 @@ metadata:
     argocd.argoproj.io/sync-wave: "3"
 spec:
   parentRefs:
-    - name: kong
-      namespace: kong
-      sectionName: https
+    - name: traefik-gateway
+      namespace: traefik
+      sectionName: websecure
   hostnames:
     - argocd.yourdevops.me
   rules:
