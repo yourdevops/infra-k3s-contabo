@@ -31,6 +31,8 @@ spec:
           managedRoutes:
             - name: header-route
           steps:
+            - setCanaryScale:
+                replicas: 1
             - setHeaderRoute:
                 name: header-route
                 match:
@@ -38,15 +40,17 @@ spec:
                     headerValue:
                       regex: ".*Firefox.*"
             - pause: {}
+            - setCanaryScale:
+                matchTrafficWeight: true
             - setWeight: 20
             - pause:
-                duration: 30s
+                duration: 5m
             - setWeight: 50
             - pause:
-                duration: 30s
+                duration: 5m
             - setWeight: 80
             - pause:
-                duration: 30s
+                duration: 5m
   destination:
     server: https://kubernetes.default.svc
     namespace: header-demo
