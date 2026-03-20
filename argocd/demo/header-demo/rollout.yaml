@@ -1,0 +1,49 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: header-demo
+  namespace: demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  replicas: 3
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: header-demo
+  template:
+    metadata:
+      labels:
+        app: header-demo
+    spec:
+      containers:
+        - name: rollouts-demo
+          image: argoproj/rollouts-demo:blue
+          ports:
+            - containerPort: 8080
+  strategy:
+    canary:
+      canaryService: header-demo-canary
+      stableService: header-demo-stable
+      trafficRouting:
+        managedRoutes:
+          - name: header-route
+        plugins:
+          argoproj-labs/gatewayAPI:
+            httpRoute: header-demo
+            namespace: demo
+      steps:
+        - setHeaderRoute:
+            name: header-route
+            match:
+              - headerName: User-Agent
+                headerValue:
+                  regex: ".*Firefox.*"
+        - pause: {}
+        - setWeight: 20
+        - pause: { duration: 30s }
+        - setWeight: 50
+        - pause: { duration: 30s }
+        - setWeight: 80
+        - pause: { duration: 30s }
