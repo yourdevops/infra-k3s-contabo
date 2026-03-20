@@ -1,0 +1,18 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rollouts-dashboard-basicauth
+  namespace: argo-rollouts
+type: Opaque
+stringData:
+  users: "rollouts:$apr1$Au0kBaXs$GqwoLuUU4gSpYk8Tfwfmf/"
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: rollouts-dashboard-basicauth
+  namespace: argo-rollouts
+spec:
+  basicAuth:
+    secret: rollouts-dashboard-basicauth
