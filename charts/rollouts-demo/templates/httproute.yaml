@@ -1,0 +1,55 @@
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ include "rollouts-demo.name" . }}
+  labels:
+    {{- include "rollouts-demo.labels" . | nindent 4 }}
+spec:
+  parentRefs:
+    - name: {{ .Values.gateway.name }}
+      namespace: {{ .Values.gateway.namespace }}
+      sectionName: {{ .Values.gateway.sectionName }}
+  hostnames:
+    - {{ .Values.hostname }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        {{- if eq .Values.strategy "blueGreen" }}
+        - name: {{ include "rollouts-demo.name" . }}-active
+          port: 80
+        {{- else }}
+        - name: {{ include "rollouts-demo.name" . }}-stable
+          port: 80
+          weight: 100
+        - name: {{ include "rollouts-demo.name" . }}-canary
+          port: 80
+          weight: 0
+        {{- end }}
+{{- if and (eq .Values.strategy "blueGreen") .Values.blueGreen.previewHostname }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ include "rollouts-demo.name" . }}-preview
+  labels:
+    {{- include "rollouts-demo.labels" . | nindent 4 }}
+spec:
+  parentRefs:
+    - name: {{ .Values.gateway.name }}
+      namespace: {{ .Values.gateway.namespace }}
+      sectionName: {{ .Values.gateway.sectionName }}
+  hostnames:
+    - {{ .Values.blueGreen.previewHostname }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: {{ include "rollouts-demo.name" . }}-preview
+          port: 80
+{{- end }}

@@ -1,0 +1,41 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bg-demo
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: git@github.com:yourdevops/infra-k3s-contabo.git
+    targetRevision: main
+    path: charts/rollouts-demo
+    helm:
+      releaseName: bg-demo
+      valuesObject:
+        image:
+          repository: argoproj/rollouts-demo
+          tag: blue
+        replicas: 2
+        strategy: blueGreen
+        hostname: bg-demo.yourdevops.me
+        gateway:
+          name: traefik-gateway
+          namespace: traefik
+          sectionName: websecure
+        blueGreen:
+          autoPromotionEnabled: false
+          previewHostname: bg-demo-preview.yourdevops.me
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: bg-demo
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+    syncOptions:
+      - CreateNamespace=true

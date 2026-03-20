@@ -1,0 +1,35 @@
+image:
+  repository: argoproj/rollouts-demo
+  tag: blue
+
+replicas: 3
+
+# canary | blueGreen
+strategy: canary
+
+gateway:
+  name: ""
+  namespace: ""
+  sectionName: ""
+
+hostname: ""
+
+canary:
+  steps:
+    - setWeight: 5
+    - pause:
+        duration: 30s
+    - setWeight: 20
+    - pause:
+        duration: 30s
+    - setWeight: 50
+    - pause:
+        duration: 30s
+    - setWeight: 80
+    - pause:
+        duration: 30s
+  managedRoutes: []
+
+blueGreen:
+  autoPromotionEnabled: false
+  previewHostname: ""

@@ -1,0 +1,55 @@
+{{- if eq .Values.strategy "blueGreen" }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "rollouts-demo.name" . }}-active
+  labels:
+    {{- include "rollouts-demo.labels" . | nindent 4 }}
+spec:
+  selector:
+    {{- include "rollouts-demo.selectorLabels" . | nindent 4 }}
+  ports:
+    - port: 80
+      targetPort: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "rollouts-demo.name" . }}-preview
+  labels:
+    {{- include "rollouts-demo.labels" . | nindent 4 }}
+spec:
+  selector:
+    {{- include "rollouts-demo.selectorLabels" . | nindent 4 }}
+  ports:
+    - port: 80
+      targetPort: http
+{{- else }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "rollouts-demo.name" . }}-stable
+  labels:
+    {{- include "rollouts-demo.labels" . | nindent 4 }}
+spec:
+  selector:
+    {{- include "rollouts-demo.selectorLabels" . | nindent 4 }}
+  ports:
+    - port: 80
+      targetPort: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "rollouts-demo.name" . }}-canary
+  labels:
+    {{- include "rollouts-demo.labels" . | nindent 4 }}
+spec:
+  selector:
+    {{- include "rollouts-demo.selectorLabels" . | nindent 4 }}
+  ports:
+    - port: 80
+      targetPort: http
+{{- end }}

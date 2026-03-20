@@ -1,0 +1,64 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: {{ include "rollouts-demo.name" . }}
+  labels:
+    {{- include "rollouts-demo.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicas }}
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      {{- include "rollouts-demo.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "rollouts-demo.selectorLabels" . | nindent 8 }}
+    spec:
+      terminationGracePeriodSeconds: 45
+      containers:
+        - name: rollouts-demo
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          ports:
+            - name: http
+              containerPort: 8080
+          startupProbe:
+            httpGet:
+              path: /
+              port: http
+            failureThreshold: 3
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 5
+            failureThreshold: 2
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 10
+            failureThreshold: 3
+  strategy:
+    {{- if eq .Values.strategy "blueGreen" }}
+    blueGreen:
+      activeService: {{ include "rollouts-demo.name" . }}-active
+      previewService: {{ include "rollouts-demo.name" . }}-preview
+      autoPromotionEnabled: {{ .Values.blueGreen.autoPromotionEnabled }}
+    {{- else }}
+    canary:
+      canaryService: {{ include "rollouts-demo.name" . }}-canary
+      stableService: {{ include "rollouts-demo.name" . }}-stable
+      trafficRouting:
+        {{- with .Values.canary.managedRoutes }}
+        managedRoutes:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        plugins:
+          argoproj-labs/gatewayAPI:
+            httpRoute: {{ include "rollouts-demo.name" . }}
+            namespace: {{ .Release.Namespace }}
+      steps:
+        {{- toYaml .Values.canary.steps | nindent 8 }}
+    {{- end }}

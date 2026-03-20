@@ -1,0 +1,58 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: header-demo
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: git@github.com:yourdevops/infra-k3s-contabo.git
+    targetRevision: main
+    path: charts/rollouts-demo
+    helm:
+      releaseName: header-demo
+      valuesObject:
+        image:
+          repository: argoproj/rollouts-demo
+          tag: blue
+        replicas: 3
+        strategy: canary
+        hostname: header-demo.yourdevops.me
+        gateway:
+          name: traefik-gateway
+          namespace: traefik
+          sectionName: websecure
+        canary:
+          managedRoutes:
+            - name: header-route
+          steps:
+            - setHeaderRoute:
+                name: header-route
+                match:
+                  - headerName: User-Agent
+                    headerValue:
+                      regex: ".*Firefox.*"
+            - pause: {}
+            - setWeight: 20
+            - pause:
+                duration: 30s
+            - setWeight: 50
+            - pause:
+                duration: 30s
+            - setWeight: 80
+            - pause:
+                duration: 30s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: header-demo
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+    syncOptions:
+      - CreateNamespace=true

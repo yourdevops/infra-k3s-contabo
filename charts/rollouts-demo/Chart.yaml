@@ -1,0 +1,4 @@
+apiVersion: v2
+name: rollouts-demo
+description: Argo Rollouts demo — canary, blue-green, and header-based routing
+version: 0.1.0
