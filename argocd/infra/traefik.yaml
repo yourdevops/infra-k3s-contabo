@@ -29,18 +29,23 @@ spec:
             web:
               port: 8000        # container port (chart maps to Service port 80 via ports.web.exposedPort)
               protocol: HTTP
-              namespacePolicy: All
+              namespacePolicy:
+                from: All
             websecure:
               port: 8443        # container port (chart maps to Service port 443 via ports.websecure.exposedPort)
               protocol: HTTPS
               hostname: "*.yourdevops.me"
-              namespacePolicy: All
+              namespacePolicy:
+                from: All
               certificateRefs:
                 - name: wildcard-yourdevops-me-tls
         ports:
           web:
-            redirectTo:
-              port: websecure
+            http:
+              redirections:
+                entryPoint:
+                  to: websecure
+                  scheme: https
         logs:
           access:
             enabled: true
