@@ -56,7 +56,7 @@ spec:
     namespace: header-demo
   syncPolicy:
     automated:
-      selfHeal: true
+      selfHeal: false
       prune: true
     syncOptions:
       - CreateNamespace=true
