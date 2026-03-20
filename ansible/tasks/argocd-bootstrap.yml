@@ -38,7 +38,7 @@
           server: https://kubernetes.default.svc
         syncPolicy:
           automated:
-            selfHeal: true
+            selfHeal: false
             prune: true
           syncOptions:
             - SkipDryRunOnMissingResource=true
