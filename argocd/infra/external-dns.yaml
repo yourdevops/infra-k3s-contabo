@@ -30,6 +30,8 @@ spec:
           - yourdevops.me
         policy: sync
         txtOwnerId: k3s-contabo
+        extraArgs:
+          - --cloudflare-proxied
   destination:
     server: https://kubernetes.default.svc
     namespace: external-dns
