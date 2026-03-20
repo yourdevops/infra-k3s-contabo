@@ -19,7 +19,7 @@ spec:
       valuesObject:
         image:
           repository: argoproj/rollouts-demo
-          tag: blue
+          tag: green
         replicas: 3
         strategy: canary
         hostname: header-demo.yourdevops.me
