@@ -14,8 +14,12 @@ spec:
     repoURL: https://traefik.github.io/charts
     chart: traefik
     targetRevision: "39.0.6"
+    # Values ref: https://github.com/traefik/traefik-helm-chart/blob/master/traefik/values.yaml
     helm:
       valuesObject:
+        global:
+          checkNewVersion: false
+          sendAnonymousUsage: false
         providers:
           kubernetesGateway:
             enabled: true
@@ -23,16 +27,24 @@ spec:
           enabled: true
           listeners:
             web:
-              port: 8000
+              port: 8000        # container port (chart maps to Service port 80 via ports.web.exposedPort)
               protocol: HTTP
               namespacePolicy: All
             websecure:
-              port: 8443
+              port: 8443        # container port (chart maps to Service port 443 via ports.websecure.exposedPort)
               protocol: HTTPS
               hostname: "*.yourdevops.me"
               namespacePolicy: All
               certificateRefs:
                 - name: wildcard-yourdevops-me-tls
+        ports:
+          web:
+            redirectTo:
+              port: websecure
+        logs:
+          access:
+            enabled: true
+            format: json
         service:
           type: LoadBalancer
   destination:
