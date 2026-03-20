@@ -9,9 +9,11 @@ IaC for a single-node k3s cluster on Contabo (yourdevops.me). Three tools manage
 - **Ansible** (`ansible/`) — provisions the VM, installs k3s, Helm, and ArgoCD
 - **Terraform** (`terraform/`) — three isolated root modules, each a TFC workspace:
   - `tfc-workspace-management/` — manages the TFC workspaces themselves (bootstrap)
-  - `cloudflare/` — DNS, Zero Trust Tunnel, tunnel config
+  - `cloudflare/` — DNS zone, Zero Trust Tunnel (idle, for future WARP-only services), SSL settings
   - `contabo/` — Contabo VMs and resources
-- **ArgoCD manifests** (`argocd/`) — GitOps-managed cluster workloads (Kong ingress, cloudflared, ArgoCD server ingress)
+- **ArgoCD manifests** (`argocd/`) — GitOps-managed cluster workloads (recursive directory scan)
+  - `argocd/infra/` — infrastructure ArgoCD Applications and raw manifests
+  - `argocd/infra/configs/` — raw k8s manifests (ClusterIssuer, Certificate, GatewayClass, Gateway) applied directly by root app
 
 After the Ansible playbook runs, ArgoCD takes over all workload management via the `argocd/` directory.
 
@@ -48,19 +50,21 @@ State is managed by Terraform Cloud (org: `yourdevops`). The `tfc-workspace-mana
 
 ### Networking path
 
-All external traffic flows through: **Cloudflare edge (TLS termination) -> Cloudflare Tunnel -> cloudflared pods in cluster -> Kong ingress (ClusterIP) -> services**. TLS is terminated at the Cloudflare edge; internal traffic is plain HTTP. Terraform manages the wildcard CNAME (`*.yourdevops.me`) pointing to the tunnel.
+External traffic flows through: **Client -> DNS (per-host A records managed by external-dns) -> Kong Gateway (LoadBalancer, ports 80/443 via k3s ServiceLB) -> services**. TLS is terminated at Kong using a wildcard Let's Encrypt certificate (`*.yourdevops.me`) obtained by cert-manager via DNS-01 challenge against Cloudflare. Internal traffic (Kong -> services) is plain HTTP.
+
+Routing uses the Kubernetes Gateway API: a `GatewayClass` + `Gateway` resource in the `kong` namespace defines HTTP/HTTPS listeners, and `HTTPRoute` resources in service namespaces attach to it. external-dns watches HTTPRoute hostnames and auto-creates/deletes A records in Cloudflare. The Cloudflare Zero Trust Tunnel and cloudflared pods remain deployed but idle — reserved for future WARP-only private services.
 
 ### Ansible playbook order
 
 `playbook.yml` runs four plays sequentially:
 1. Python venv bootstrap (uses system python, creates `/opt/ansible-venv` with kubernetes/jsonpatch)
 2. OS baseline (hostname, disable UFW, unattended-upgrades, fail2ban)
-3. k3s install (delegates to `k3s.orchestration.site` collection — Traefik and ServiceLB disabled)
-4. Bootstrap ArgoCD play on `server[0]`: Helm install, root Application, Cloudflare secrets
+3. k3s install (delegates to `k3s.orchestration.site` collection — Traefik disabled, ServiceLB enabled)
+4. Bootstrap ArgoCD play on `server[0]`: Helm install, root Application, Cloudflare secrets (tunnel token + API token for cert-manager and external-dns)
 
 ### Secrets
 
-Encrypted via `ansible-vault` in `group_vars/k3s_cluster/vault.yml`. The vault password file is `.vault-pass` (gitignored), auto-loaded by `ansible.cfg`. Vault contains: k3s token, ArgoCD repo SSH key, cloudflared tunnel token.
+Encrypted via `ansible-vault` in `group_vars/k3s_cluster/vault.yml`. The vault password file is `.vault-pass` (gitignored), auto-loaded by `ansible.cfg`. Vault contains: k3s token, ArgoCD repo SSH key, cloudflared tunnel token, Cloudflare API token (DNS edit).
 
 ### Pinned versions
 
@@ -68,7 +72,11 @@ All Ansible-managed component versions are centralized in `group_vars/k3s_cluste
 
 ### ArgoCD app-of-apps
 
-The Ansible bootstrap creates a root `Application` that watches `argocd/` on `main`. Any YAML added to `argocd/` is auto-synced (selfHeal + prune enabled). Current apps: Kong ingress controller, cloudflared deployment, ArgoCD server ingress.
+The Ansible bootstrap creates a root `Application` that watches `argocd/` on `main` with `directory.recurse: true`. Any YAML added anywhere under `argocd/` is auto-synced (selfHeal + prune enabled). Current contents: Gateway API CRDs, Kong, cert-manager, external-dns (Helm Applications), cloudflared (raw Deployment), ArgoCD HTTPRoute, and configs (ClusterIssuer, wildcard Certificate, GatewayClass, Gateway).
+
+### TLS and certificates
+
+cert-manager obtains a wildcard certificate (`*.yourdevops.me` + `yourdevops.me`) from Let's Encrypt using DNS-01 challenge via Cloudflare API. The certificate Secret (`wildcard-yourdevops-me-tls`) lives in the `kong` namespace. The Gateway HTTPS listener references this secret for TLS termination. Cloudflare zone SSL is set to Full (Strict).
 
 ## Conventions
 
@@ -77,3 +85,4 @@ The Ansible bootstrap creates a root `Application` that watches `argocd/` on `ma
 - Python interpreter on remote: `/opt/ansible-venv/bin/python` (set in inventory vars)
 - Ansible tasks use FQCNs (`ansible.builtin.*`, `kubernetes.core.*`)
 - Kong uses `ServerSideApply=true` sync option (required for its CRDs)
+- Cloudflare API token secret (`cloudflare-api-token`) is duplicated into `cert-manager` and `external-dns` namespaces by Ansible

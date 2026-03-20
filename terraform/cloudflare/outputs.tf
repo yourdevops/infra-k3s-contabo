@@ -27,8 +27,3 @@ output "tunnel_cname" {
   description = "Tunnel CNAME target"
   value       = "${cloudflare_zero_trust_tunnel_cloudflared.k3s_contabo.id}.cfargotunnel.com"
 }
-
-output "wildcard_dns_record_id" {
-  description = "Wildcard DNS record ID"
-  value       = cloudflare_dns_record.wildcard_tunnel.id
-}

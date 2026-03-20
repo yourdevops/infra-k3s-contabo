@@ -2,31 +2,26 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: kong
+  name: cert-manager
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
-    repoURL: https://charts.konghq.com
-    chart: kong
-    targetRevision: "2.52.0"
+    repoURL: https://charts.jetstack.io
+    chart: cert-manager
+    targetRevision: "v1.20.0"
     helm:
       valuesObject:
-        proxy:
-          type: ClusterIP          # no LB — cloudflared handles ingress
-          tls:
-            enabled: false         # TLS terminates at Cloudflare edge
-        ingressController:
+        crds:
           enabled: true
   destination:
     server: https://kubernetes.default.svc
-    namespace: kong
+    namespace: cert-manager
   syncPolicy:
     automated:
       selfHeal: true
       prune: true
     syncOptions:
       - CreateNamespace=true
-      - ServerSideApply=true       # required for Kong CRDs

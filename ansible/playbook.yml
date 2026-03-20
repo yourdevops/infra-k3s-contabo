@@ -46,3 +46,6 @@
 
     - name: Create Cloudflare secrets
       ansible.builtin.include_tasks: tasks/cloudflare-secrets.yml
+
+    - name: Create Cloudflare DNS token secrets
+      ansible.builtin.include_tasks: tasks/cloudflare-dns-token.yml

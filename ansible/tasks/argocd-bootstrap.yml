@@ -32,6 +32,8 @@
           repoURL: git@github.com:yourdevops/infra-k3s-contabo.git
           targetRevision: main
           path: argocd/
+          directory:
+            recurse: true
         destination:
           server: https://kubernetes.default.svc
         syncPolicy:
