@@ -44,9 +44,3 @@ resource "cloudflare_dns_record" "s01" {
   proxied = false
   ttl     = 1
 }
-
-resource "cloudflare_zone_setting" "ssl" {
-  zone_id    = cloudflare_zone.this.id
-  setting_id = "ssl"
-  value      = "full_strict"
-}

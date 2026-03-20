@@ -4,6 +4,8 @@ kind: Gateway
 metadata:
   name: kong
   namespace: kong
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
 spec:
   gatewayClassName: kong
   listeners:
