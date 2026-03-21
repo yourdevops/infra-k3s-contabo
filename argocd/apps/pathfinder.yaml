@@ -30,10 +30,14 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: pathfinder
+  ignoreDifferences:
+    - group: ""
+      kind: Secret
+      jsonPointers:
+        - /data
   syncPolicy:
     automated:
       prune: true
       selfHeal: false
     syncOptions:
       - CreateNamespace=true
-      - ServerSideApply=true
