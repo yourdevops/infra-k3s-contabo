@@ -2,6 +2,7 @@
 - name: Bootstrap Python venv
   hosts: all
   become: true
+  tags: [python]
   vars:
     ansible_python_interpreter: /usr/bin/python3
   tasks:
@@ -11,16 +12,19 @@
 - name: OS baseline
   hosts: all
   become: true
+  tags: [os]
   tasks:
     - name: Configure OS baseline
       ansible.builtin.include_tasks: tasks/os-baseline.yml
 
 - name: Deploy k3s cluster
   ansible.builtin.import_playbook: k3s.orchestration.site
+  tags: [k3s]
 
 - name: Bootstrap ArgoCD
   hosts: server[0]
   become: true
+  tags: [argocd]
   pre_tasks:
     - name: Wait for CoreDNS to be available
       kubernetes.core.k8s_info:

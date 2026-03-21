@@ -16,9 +16,10 @@
     wait_timeout: 5m0s
     release_values:
       configs:
+        cm:
+          exec.enabled: true
         params:
           server.insecure: true  # TLS terminates at Cloudflare edge
-          server.enable.exec: true
         rbac:
           policy.csv: |
             p, role:admin, exec, create, */*, allow
