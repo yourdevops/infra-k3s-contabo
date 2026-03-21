@@ -26,6 +26,7 @@ spec:
                 key: api-token
         sources:
           - gateway-httproute
+          - ingress
         domainFilters:
           - yourdevops.me
         policy: sync

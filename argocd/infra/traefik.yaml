@@ -21,8 +21,14 @@ spec:
           checkNewVersion: false
           sendAnonymousUsage: false
         providers:
+          kubernetesIngress:
+            enabled: true
           kubernetesGateway:
             enabled: true
+        tlsStore:
+          default:
+            defaultCertificate:
+              secretName: wildcard-yourdevops-me-tls
         gateway:
           enabled: true
           listeners:
