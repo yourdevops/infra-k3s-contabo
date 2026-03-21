@@ -15,7 +15,7 @@ spec:
       valuesObject:
         image:
           repository: ghcr.io/yourdevops/pathfinder
-          tag: sha-a5a7900
+          tag: sha-9468453
         config:
           allowedHosts: "pathfinder.yourdevops.me"
           csrfTrustedOrigins: "https://pathfinder.yourdevops.me"

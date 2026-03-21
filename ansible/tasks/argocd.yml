@@ -18,6 +18,10 @@
       configs:
         params:
           server.insecure: true  # TLS terminates at Cloudflare edge
+          server.enable.exec: true
+        rbac:
+          policy.csv: |
+            p, role:admin, exec, create, */*, allow
       server:
         extensions:
           enabled: true
