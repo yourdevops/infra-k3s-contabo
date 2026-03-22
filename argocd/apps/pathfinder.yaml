@@ -16,6 +16,7 @@ spec:
         image:
           repository: ghcr.io/yourdevops/pathfinder
           tag: latest # TODO: KRO for feature branches or just a dev env
+          pullPolicy: Always
         config:
           allowedHosts: "pathfinder.yourdevops.me"
           csrfTrustedOrigins: "https://pathfinder.yourdevops.me"
