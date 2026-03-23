@@ -24,6 +24,7 @@ spec:
         strategy: canary
         hostname: canary-demo.yourdevops.me
         gateway:
+          enabled: true
           name: traefik-gateway
           namespace: traefik
           sectionName: websecure
