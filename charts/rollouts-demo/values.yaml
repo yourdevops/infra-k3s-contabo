@@ -21,11 +21,14 @@ ingress:
 hostname: ""
 
 canary:
+  dynamicStableScale: true
   # Override the trafficRouting block in the Rollout spec.
   # When empty, defaults to the Gateway API plugin (using gateway values above).
   # For ALB: { alb: { ingress: <release-name>, servicePort: 80 } }
   trafficRouting: {}
   steps:
+    - setCanaryScale:
+        matchTrafficWeight: true
     - setWeight: 5
     - pause:
         duration: 30s

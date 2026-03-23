@@ -28,7 +28,10 @@ spec:
           namespace: traefik
           sectionName: websecure
         canary:
+          dynamicStableScale: true
           steps:
+            - setCanaryScale:
+                matchTrafficWeight: true
             - setWeight: 5
             - pause:
                 duration: 5m

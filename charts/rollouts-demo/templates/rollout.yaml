@@ -48,6 +48,7 @@ spec:
       autoPromotionEnabled: {{ .Values.blueGreen.autoPromotionEnabled }}
     {{- else }}
     canary:
+      dynamicStableScale: {{ .Values.canary.dynamicStableScale }}
       canaryService: {{ include "rollouts-demo.name" . }}-canary
       stableService: {{ include "rollouts-demo.name" . }}-stable
       trafficRouting:
