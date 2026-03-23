@@ -24,6 +24,7 @@ spec:
         strategy: canary
         hostname: header-demo.yourdevops.me
         gateway:
+          enabled: true
           name: traefik-gateway
           namespace: traefik
           sectionName: websecure
@@ -33,6 +34,7 @@ spec:
           steps:
             - setCanaryScale:
                 replicas: 1
+            - setWeight: 1
             - setHeaderRoute:
                 name: header-route
                 match:

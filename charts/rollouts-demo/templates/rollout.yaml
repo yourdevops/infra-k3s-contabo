@@ -55,10 +55,14 @@ spec:
         managedRoutes:
           {{- toYaml . | nindent 10 }}
         {{- end }}
+        {{- if .Values.canary.trafficRouting }}
+        {{- toYaml .Values.canary.trafficRouting | nindent 8 }}
+        {{- else }}
         plugins:
           argoproj-labs/gatewayAPI:
             httpRoute: {{ include "rollouts-demo.name" . }}
             namespace: {{ .Release.Namespace }}
+        {{- end }}
       steps:
         {{- toYaml .Values.canary.steps | nindent 8 }}
     {{- end }}

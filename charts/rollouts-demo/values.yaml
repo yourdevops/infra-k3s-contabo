@@ -8,13 +8,23 @@ replicas: 3
 strategy: canary
 
 gateway:
+  enabled: false
   name: ""
   namespace: ""
   sectionName: ""
 
+ingress:
+  enabled: false
+  ingressClassName: ""
+  annotations: {}
+
 hostname: ""
 
 canary:
+  # Override the trafficRouting block in the Rollout spec.
+  # When empty, defaults to the Gateway API plugin (using gateway values above).
+  # For ALB: { alb: { ingress: <release-name>, servicePort: 80 } }
+  trafficRouting: {}
   steps:
     - setWeight: 5
     - pause:

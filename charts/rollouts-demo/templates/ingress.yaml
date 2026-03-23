@@ -1,0 +1,59 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "rollouts-demo.name" . }}
+  labels:
+    {{- include "rollouts-demo.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.ingress.ingressClassName }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.hostname }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                {{- if eq .Values.strategy "blueGreen" }}
+                name: {{ include "rollouts-demo.name" . }}-active
+                {{- else }}
+                name: {{ include "rollouts-demo.name" . }}-stable
+                {{- end }}
+                port:
+                  number: 80
+{{- if and (eq .Values.strategy "blueGreen") .Values.blueGreen.previewHostname }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "rollouts-demo.name" . }}-preview
+  labels:
+    {{- include "rollouts-demo.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.ingress.ingressClassName }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.blueGreen.previewHostname }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "rollouts-demo.name" . }}-preview
+                port:
+                  number: 80
+{{- end }}
+{{- end }}
