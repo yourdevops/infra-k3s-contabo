@@ -52,7 +52,7 @@ spec:
           - templateName: {{ include "rollouts-demo.name" . }}-health
         args:
           - name: canary-url
-            value: http://{{ include "rollouts-demo.name" . }}-preview/color
+            value: http://{{ include "rollouts-demo.name" . }}-preview.{{ .Release.Namespace }}.svc.cluster.local/color
       {{- end }}
     {{- else }}
     canary:
@@ -81,6 +81,6 @@ spec:
         startingStep: {{ .Values.analysis.startingStep }}
         args:
           - name: canary-url
-            value: http://{{ include "rollouts-demo.name" . }}-canary/color
+            value: http://{{ include "rollouts-demo.name" . }}-canary.{{ .Release.Namespace }}.svc.cluster.local/color
       {{- end }}
     {{- end }}

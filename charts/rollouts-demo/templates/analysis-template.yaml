@@ -11,6 +11,9 @@ spec:
   metrics:
     - name: http-success
       interval: {{ .Values.analysis.interval }}
+      {{- with .Values.analysis.count }}
+      count: {{ . }}
+      {{- end }}
       failureLimit: {{ .Values.analysis.failureLimit }}
       provider:
         web:
