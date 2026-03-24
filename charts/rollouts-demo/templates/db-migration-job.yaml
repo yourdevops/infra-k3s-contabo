@@ -1,0 +1,34 @@
+{{- if .Values.migrationJob.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "rollouts-demo.name" . }}-db-migrate
+  labels:
+    {{- include "rollouts-demo.labels" . | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/sync-wave: "0"
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  activeDeadlineSeconds: 60
+  template:
+    spec:
+      containers:
+        - name: migrate
+          image: busybox:1.37
+          command: [sh, -c]
+          args:
+            - |
+              echo "=== Running mock database migration ==="
+              echo "Applying V2__add_feature_flags_table.sql..."
+              sleep 3
+              echo "Migration completed successfully."
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              memory: 32Mi
+      restartPolicy: Never
+  backoffLimit: 0
+{{- end }}

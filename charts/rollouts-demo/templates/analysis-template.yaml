@@ -1,0 +1,19 @@
+{{- if .Values.analysis.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: {{ include "rollouts-demo.name" . }}-health
+  labels:
+    {{- include "rollouts-demo.labels" . | nindent 4 }}
+spec:
+  args:
+    - name: canary-url
+  metrics:
+    - name: http-success
+      interval: {{ .Values.analysis.interval }}
+      failureLimit: {{ .Values.analysis.failureLimit }}
+      provider:
+        web:
+          url: "{{ "{{args.canary-url}}" }}"
+          timeoutSeconds: 3
+{{- end }}

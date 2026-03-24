@@ -28,23 +28,29 @@ spec:
           name: traefik-gateway
           namespace: traefik
           sectionName: websecure
+        migrationJob:
+          enabled: true
+        analysis:
+          enabled: true
+          interval: 10s
+          failureLimit: 1
+          startingStep: 2
         canary:
           dynamicStableScale: true
           steps:
             - setCanaryScale:
                 matchTrafficWeight: true
             - setWeight: 5
-            - pause:
-                duration: 5m
+            - pause: {}
             - setWeight: 20
             - pause:
-                duration: 5m
+                duration: 30s
             - setWeight: 50
             - pause:
-                duration: 5m
+                duration: 30s
             - setWeight: 80
             - pause:
-                duration: 5m
+                duration: 30s
   destination:
     server: https://kubernetes.default.svc
     namespace: canary-demo

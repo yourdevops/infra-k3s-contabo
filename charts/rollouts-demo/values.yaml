@@ -46,3 +46,12 @@ canary:
 blueGreen:
   autoPromotionEnabled: false
   previewHostname: ""
+
+migrationJob:
+  enabled: false
+
+analysis:
+  enabled: false
+  interval: 10s
+  failureLimit: 1
+  startingStep: 2

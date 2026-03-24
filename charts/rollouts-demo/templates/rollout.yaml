@@ -46,6 +46,14 @@ spec:
       activeService: {{ include "rollouts-demo.name" . }}-active
       previewService: {{ include "rollouts-demo.name" . }}-preview
       autoPromotionEnabled: {{ .Values.blueGreen.autoPromotionEnabled }}
+      {{- if .Values.analysis.enabled }}
+      prePromotionAnalysis:
+        templates:
+          - templateName: {{ include "rollouts-demo.name" . }}-health
+        args:
+          - name: canary-url
+            value: http://{{ include "rollouts-demo.name" . }}-preview/color
+      {{- end }}
     {{- else }}
     canary:
       dynamicStableScale: {{ .Values.canary.dynamicStableScale }}
@@ -66,4 +74,13 @@ spec:
         {{- end }}
       steps:
         {{- toYaml .Values.canary.steps | nindent 8 }}
+      {{- if .Values.analysis.enabled }}
+      analysis:
+        templates:
+          - templateName: {{ include "rollouts-demo.name" . }}-health
+        startingStep: {{ .Values.analysis.startingStep }}
+        args:
+          - name: canary-url
+            value: http://{{ include "rollouts-demo.name" . }}-canary/color
+      {{- end }}
     {{- end }}

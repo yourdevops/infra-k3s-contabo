@@ -19,7 +19,7 @@ spec:
       valuesObject:
         image:
           repository: argoproj/rollouts-demo
-          tag: blue
+          tag: green
         replicas: 3
         strategy: canary
         hostname: header-demo.yourdevops.me
@@ -28,6 +28,8 @@ spec:
           name: traefik-gateway
           namespace: traefik
           sectionName: websecure
+        migrationJob:
+          enabled: true
         canary:
           managedRoutes:
             - name: header-route

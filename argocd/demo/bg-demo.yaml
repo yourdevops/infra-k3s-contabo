@@ -24,9 +24,14 @@ spec:
         strategy: blueGreen
         hostname: bg-demo.yourdevops.me
         gateway:
+          enabled: true
           name: traefik-gateway
           namespace: traefik
           sectionName: websecure
+        migrationJob:
+          enabled: true
+        analysis:
+          enabled: true
         blueGreen:
           autoPromotionEnabled: false
           previewHostname: bg-demo-preview.yourdevops.me
