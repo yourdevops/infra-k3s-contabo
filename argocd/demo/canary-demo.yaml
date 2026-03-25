@@ -19,7 +19,7 @@ spec:
       valuesObject:
         image:
           repository: argoproj/rollouts-demo
-          tag: bad-yellow
+          tag: blue
         replicas: 3
         strategy: canary
         hostname: canary-demo.yourdevops.me
