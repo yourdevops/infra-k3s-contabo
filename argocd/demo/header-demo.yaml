@@ -25,9 +25,9 @@ spec:
         hostname: header-demo.yourdevops.me
         gateway:
           enabled: true
-          name: traefik-gateway
-          namespace: traefik
-          sectionName: websecure
+          name: envoy-gateway
+          namespace: envoy-gateway-system
+          sectionName: https
         migrationJob:
           enabled: true
         canary:

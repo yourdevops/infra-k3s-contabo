@@ -21,13 +21,7 @@ spec:
           allowedHosts: "pathfinder.yourdevops.me"
           csrfTrustedOrigins: "https://pathfinder.yourdevops.me"
         ingress:
-          enabled: true
-          className: traefik
-          hosts:
-            - host: pathfinder.yourdevops.me
-              paths:
-                - path: /
-                  pathType: Prefix
+          enabled: false
   destination:
     server: https://kubernetes.default.svc
     namespace: pathfinder
