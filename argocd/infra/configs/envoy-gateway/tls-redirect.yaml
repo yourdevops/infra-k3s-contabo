@@ -8,12 +8,19 @@ metadata:
     argocd.argoproj.io/sync-wave: "4"
 spec:
   parentRefs:
-    - name: envoy-gateway
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: envoy-gateway
       sectionName: http
   hostnames:
     - "*.yourdevops.me"
   rules:
-    - filters:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
         - type: RequestRedirect
           requestRedirect:
             scheme: https
+            statusCode: 302
