@@ -14,6 +14,7 @@ spec:
     repoURL: registry-1.docker.io
     chart: envoyproxy/gateway-helm
     targetRevision: v1.7.1
+    # Original values: https://github.com/envoyproxy/gateway/blob/v1.7.1/charts/gateway-helm/values.tmpl.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: envoy-gateway-system
