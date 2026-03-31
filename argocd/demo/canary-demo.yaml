@@ -78,6 +78,11 @@ spec:
             - pause:
                 duration: 30s
 
+  ignoreDifferences:
+    - group: ""
+      kind: Service
+      jqPathExpressions:
+        - .spec.selector["rollouts-pod-template-hash"]
   destination:
     server: https://kubernetes.default.svc
     namespace: canary-demo
