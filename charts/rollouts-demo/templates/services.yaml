@@ -12,6 +12,7 @@ spec:
   ports:
     - port: 80
       targetPort: http
+      protocol: TCP
 ---
 apiVersion: v1
 kind: Service
@@ -25,6 +26,7 @@ spec:
   ports:
     - port: 80
       targetPort: http
+      protocol: TCP
 {{- else }}
 ---
 apiVersion: v1
@@ -39,6 +41,7 @@ spec:
   ports:
     - port: 80
       targetPort: http
+      protocol: TCP
 ---
 apiVersion: v1
 kind: Service
@@ -52,4 +55,5 @@ spec:
   ports:
     - port: 80
       targetPort: http
+      protocol: TCP
 {{- end }}
