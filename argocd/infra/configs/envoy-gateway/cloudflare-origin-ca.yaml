@@ -1,0 +1,48 @@
+---
+# CA certificate for Cloudflare Authenticated Origin Pulls.
+# Envoy Gateway validates client certs against this CA.
+# This is a public certificate — safe to commit to a public repo.
+#
+# Populate ca.crt from Terraform:
+#   terraform -chdir=terraform/cloudflare output -raw aop_ca_cert_pem
+#
+# On CA rotation (after terraform apply), update the value below and push.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cloudflare-origin-ca
+  namespace: envoy-gateway-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+data:
+  ca.crt: |
+    -----BEGIN CERTIFICATE-----
+    MIIFJzCCAw+gAwIBAgIRAMtkwC2sTZXvrVGdEiLrD8MwDQYJKoZIhvcNAQELBQAw
+    LTETMBEGA1UEChMKeW91cmRldm9wczEWMBQGA1UEAxMNeW91cmRldm9wcy5tZTAe
+    Fw0yNjAzMzExNDI5NTlaFw0zNjAzMjgxNDI5NTlaMC0xEzARBgNVBAoTCnlvdXJk
+    ZXZvcHMxFjAUBgNVBAMTDXlvdXJkZXZvcHMubWUwggIiMA0GCSqGSIb3DQEBAQUA
+    A4ICDwAwggIKAoICAQCdWA8PNtInerHF1w8oBXfrLS2yAsE+wGsHDI9pXe5ml9WT
+    yRksg2PLf3H2nkpjxtaT9mX4zCqfSG+t4cdmo0A8gGtGi34/a2EvDULjik4PA0qc
+    vEbKO9uAc+3idkC2d/bkTbhyegYknfMoHa4l3TzRxprNhIZFV6PXDILfnRSvUtWZ
+    DniuM7HRNjZGKvSAyHZv0RoulMvc9/lLLFiPV/xKjtN1DyuFdZCo9HA7w5lAEJcq
+    iWuk0j9lDqSrTSXFGNV5Vfkg7j6mA3ZRRF3FcAAhhDN1/p2U1YbJpp2Z0FnkZ69S
+    1t9GFT44nXV+gwWj32fSzilG8VyXco4LhWYe5YlWeL+wD07L3VpoKLgrWzkw9FCM
+    IZBront9T36vlKFn9M/7K7Ic5tJ0STfhBCGGC8zifP4JGd28suyIFUISTqFiNfmb
+    DzBWT9wPafyZ3MVLAoDBq/TUTdcs/nfZXfZyZXYTcVQBVl5367Xmw1Mc8TjAKZbf
+    OejOLFwHBDD/bbdzPDUAJ45QcjTouGc9J9zFVR9eidOJKnCFe/zLDY5KW9nX2sqa
+    8HCvBZzWWjnYrr6ONzdaBXWvHEpxqmRWTbK4lMLxQwH689NvhBumu3Oam3kL1Lvj
+    hAraIJ9m9PmXPUKp93nEV/gV8VIDNhSKwvmB7sfdJhhc9L+2s3oPA/kCZ1dIgQID
+    AQABo0IwQDAOBgNVHQ8BAf8EBAMCAQYwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4E
+    FgQUxshImIo9qAnmgDu+XT7iylcsB1gwDQYJKoZIhvcNAQELBQADggIBABqizPd0
+    4pWxBDWoYjDXsGoBw7/tTdJqeEKLUFdRb9vcBbvPlqpATp1FMmOEgRjGCqlHrH2g
+    eiMuWoWCbVWm2UIC5Ql/TMt72ZS8oL1497DZlAjax+Zfa2gxtHklHwbnJo3pNYNv
+    M1ubltdwklT0mCath7lKRiOlNp8Ytk7ZyXc7SwTYU9QfVUtKv4MF3VPAvW4zYQBW
+    H71+LQvhH/4sorynjzm/NklY/fAiSrNj01KFfaQkfL1u/eVbA7MsfOzXVodSXLof
+    r+K8JErYBv1saUt1AxGf1b2/vfNZF5hZp3duUtFzwItxCrUOj6X3TgkKEyEjxWAx
+    VLAoiV26DfxtN5AO7CN8BAT/ZKCODjqgio7XqLLQnz9QfjSnWUsDUo+OxP4rnqiB
+    SVq7YGQHrq6DXIggZxFMXCZpVxdG4YDUZP40IrKl77wcSELeL7amHS2E1xRTb3CR
+    OQ7pcamsioy6w5NiMzyAuokDEeZmU96nEtlFo+j/mriNP0tFqA5V68rhZlAtnmvd
+    fiDurqb7t7dmwUQPYPTQ93PS8jIa+Y/eqRf3fDzlio/naWnZOMpMngb6FrljdNFx
+    g17w6jblJnI9tGKfbkkHy5kUOiz1nVp90zfMpk5H2vdj7N5VLfFLALEAkc2cJ96+
+    Db5k7ziWOD/EVIp2wx4nTfkWbp4GlvNA9+IL
+    -----END CERTIFICATE-----

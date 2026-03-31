@@ -9,7 +9,7 @@ IaC for a single-node k3s cluster on Contabo (yourdevops.me). Three tools manage
 - **Ansible** (`ansible/`) — provisions the VM, installs k3s, Helm, and ArgoCD
 - **Terraform** (`terraform/`) — three isolated root modules, each a TFC workspace:
   - `tfc-workspace-management/` — manages the TFC workspaces themselves (bootstrap)
-  - `cloudflare/` — DNS zone, Zero Trust Tunnel (idle, for future WARP-only services), SSL settings
+  - `cloudflare/` — DNS zone, Zero Trust Tunnel (idle, for future WARP-only services), SSL settings, Authenticated Origin Pulls (mTLS certs + zone-level AOP)
   - `contabo/` — Contabo VMs and resources
 - **ArgoCD manifests** (`argocd/`) — GitOps-managed cluster workloads (recursive directory scan)
   - `argocd/infra/` — infrastructure ArgoCD Applications and raw manifests
@@ -77,6 +77,21 @@ The Ansible bootstrap creates a root `Application` that watches `argocd/` on `ma
 ### TLS and certificates
 
 cert-manager obtains a wildcard certificate (`*.yourdevops.me` + `yourdevops.me`) from Let's Encrypt using DNS-01 challenge via Cloudflare API. The certificate Secret (`wildcard-yourdevops-me-tls`) lives in the `envoy-gateway-system` namespace (same namespace as the Gateway). The Gateway HTTPS listener references this secret for TLS termination. Cloudflare zone SSL is set to Full (Strict).
+
+### mTLS — Cloudflare Authenticated Origin Pulls
+
+Envoy Gateway requires a valid client certificate on every HTTPS connection, proving traffic originates from our Cloudflare zone. This uses zone-level Authenticated Origin Pulls (AOP) with custom PKI (not Cloudflare's shared CA).
+
+**Trust chain**: Terraform (`terraform/cloudflare/aop.tf`) generates a private CA and leaf cert via the `tls` provider. The leaf cert is uploaded to Cloudflare (zone-level AOP). The CA cert (public, not sensitive) is stored in a ConfigMap (`cloudflare-origin-ca` in `envoy-gateway-system`), referenced by the `ClientTrafficPolicy` for client certificate validation.
+
+**Responsibility split**:
+- Terraform: CA + leaf generation, Cloudflare AOP cert upload + enablement (`aop.tf`)
+- ArgoCD: CA Secret (`cloudflare-origin-ca-secret.yaml`), ClientTrafficPolicy with `tls.clientValidation`
+
+**Cert rotation**:
+1. Leaf only: `terraform -chdir=terraform/cloudflare taint tls_private_key.aop_leaf` → `apply`
+2. Full CA: `terraform -chdir=terraform/cloudflare taint tls_private_key.aop_ca` → `apply`
+3. After either: update `ca.crt` in `cloudflare-origin-ca.yaml` from `terraform output -raw aop_ca_cert_pem` → push → ArgoCD syncs
 
 ## Conventions
 

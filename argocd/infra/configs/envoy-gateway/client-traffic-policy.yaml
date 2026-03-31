@@ -14,3 +14,11 @@ spec:
   clientIPDetection:
     xForwardedFor:
       numTrustedHops: 1
+  tls:
+    clientValidation:
+      optional: false
+      caCertificateRefs:
+        - group: ""
+          kind: ConfigMap
+          name: cloudflare-origin-ca
+          namespace: envoy-gateway-system
