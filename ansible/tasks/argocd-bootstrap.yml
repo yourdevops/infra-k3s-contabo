@@ -42,6 +42,7 @@
             prune: true
           syncOptions:
             - SkipDryRunOnMissingResource=true
+            - ServerSideApply=true
           retry:
             limit: 5
             backoff:
