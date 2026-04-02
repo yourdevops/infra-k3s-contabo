@@ -19,7 +19,7 @@ spec:
         controller:
           trafficRouterPlugins:
             - name: "argoproj-labs/gatewayAPI"
-              location: "https://github.com/yourdevops/infra-k3s-contabo/releases/download/gatewayapi-plugin-v0.11.0-fix159/gatewayapi-plugin-linux-amd64"
+              location: "https://github.com/yourdevops/rollouts-plugin-trafficrouter-gatewayapi/releases/download/v0.11.0-yourdevops.1/gatewayapi-plugin-linux-amd64"
         dashboard:
           enabled: false
   ignoreDifferences:
