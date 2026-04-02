@@ -50,20 +50,23 @@ spec:
         # ── Canary strategy ─────────────────────────────────────
         canary:
           dynamicStableScale: true         # scale down stable pods as canary weight increases
-          managedRoutes:
-            - name: header-route
+          # Header-based routing (Firefox → canary) is now handled by a standalone
+          # HTTPRoute (canary-header-route.yaml) instead of setHeaderRoute.
+          # This ensures Firefox gets 100% canary throughout the entire rollout.
+          # managedRoutes:
+          #   - name: header-route
+          managedRoutes: []
           steps:
-            # OPTIONAL Phase 1 — header-based testing (Firefox only)
+            # Phase 1 — header-based testing (Firefox → canary via standalone HTTPRoute)
             - setCanaryScale:
                 replicas: 1                # spin up a single canary pod
-            # - setWeight: 1                 # minimal traffic split - bug in controller does not allow to not set it (otherwise it falls back to 0 meaning no traffic at all goes to canary)
-            - setHeaderRoute:              # route Firefox traffic to canary
-                name: header-route
-                match:
-                  - headerName: User-Agent
-                    headerValue:
-                      regex: ".*Firefox.*"
-            - pause: {}                    # wait for manual approval
+            # - setHeaderRoute:              # replaced by canary-header-route.yaml
+            #     name: header-route
+            #     match:
+            #       - headerName: User-Agent
+            #         headerValue:
+            #           regex: ".*Firefox.*"
+            - pause: {}                    # manual gate — verify via Firefox before proceeding
 
             # Phase 2 — progressive weighted rollout
             - setCanaryScale:
@@ -72,8 +75,8 @@ spec:
             - pause:
                 duration: 30s
             - setWeight: 20
-            - pause: {}
-                # duration: 30s
+            - pause:
+                duration: 30s
             - setWeight: 50
             - pause:
                 duration: 30s
