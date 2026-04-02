@@ -7,8 +7,32 @@ metadata:
     {{- include "rollouts-demo.labels" . | nindent 4 }}
 spec:
   args:
+    {{- if .Values.analysis.prometheus.address }}
+    - name: canary-service
+    {{- else }}
     - name: canary-url
+    {{- end }}
   metrics:
+    {{- if .Values.analysis.prometheus.address }}
+    - name: success-rate
+      interval: {{ .Values.analysis.interval }}
+      {{- with .Values.analysis.count }}
+      count: {{ . }}
+      {{- end }}
+      failureLimit: {{ .Values.analysis.failureLimit }}
+      successCondition: "len(result) == 0 || result[0] >= {{ .Values.analysis.prometheus.successThreshold }}"
+      provider:
+        prometheus:
+          address: {{ .Values.analysis.prometheus.address }}
+          query: |
+            {{- if .Values.analysis.prometheus.query }}
+            {{ .Values.analysis.prometheus.query | nindent 12 }}
+            {{- else }}
+            sum(rate(envoy_cluster_upstream_rq_xx{envoy_cluster_name=~".*{{ "{{args.canary-service}}" }}.*",envoy_response_code_class="2"}[1m]))
+            /
+            sum(rate(envoy_cluster_upstream_rq_xx{envoy_cluster_name=~".*{{ "{{args.canary-service}}" }}.*"}[1m]))
+            {{- end }}
+    {{- else }}
     - name: http-success
       interval: {{ .Values.analysis.interval }}
       {{- with .Values.analysis.count }}
@@ -19,4 +43,5 @@ spec:
         web:
           url: "{{ "{{args.canary-url}}" }}"
           timeoutSeconds: 3
+    {{- end }}
 {{- end }}

@@ -55,3 +55,8 @@ analysis:
   interval: 10s
   failureLimit: 1
   startingStep: 2
+  # Prometheus-based analysis (replaces web provider when set)
+  prometheus:
+    address: ""           # e.g. http://victoria-metrics-server.victoria-metrics.svc.cluster.local:8428
+    query: ""             # custom PromQL query (optional, uses default success-rate query if empty)
+    successThreshold: 0.95

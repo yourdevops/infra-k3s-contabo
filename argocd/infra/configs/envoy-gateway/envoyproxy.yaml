@@ -1,0 +1,18 @@
+---
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: envoy-proxy-config
+  namespace: envoy-gateway-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  provider:
+    type: Kubernetes
+    kubernetes:
+      envoyDeployment:
+        pod:
+          annotations:
+            prometheus.io/scrape: "true"
+            prometheus.io/port: "19001"
+            prometheus.io/path: "/stats/prometheus"

@@ -7,3 +7,8 @@ metadata:
     argocd.argoproj.io/sync-wave: "2"
 spec:
   controllerName: gateway.envoyproxy.io/gatewayclass-controller
+  parametersRef:
+    group: gateway.envoyproxy.io
+    kind: EnvoyProxy
+    name: envoy-proxy-config
+    namespace: envoy-gateway-system

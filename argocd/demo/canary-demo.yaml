@@ -39,10 +39,13 @@ spec:
 
         # ── Automated analysis ──────────────────────────────────
         analysis:
-          enabled: true                    # creates an AnalysisTemplate + inline backgroundAnalysis
+          enabled: true                    # creates an AnalysisTemplate + inline backgroundAnalysis  
           interval: 10s
           failureLimit: 1
-          startingStep: 5                  # analysis begins at the weighted-rollout phase (step 5: setWeight 20%)
+          startingStep: 2                  # analysis begins at the header phase (step 2: setHeaderRoute)
+          prometheus:
+            address: http://victoria-metrics-server.victoria-metrics.svc.cluster.local:8428
+            successThreshold: 0.95
 
         # ── Canary strategy ─────────────────────────────────────
         canary:
