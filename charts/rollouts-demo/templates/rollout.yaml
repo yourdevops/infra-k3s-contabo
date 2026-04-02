@@ -53,8 +53,8 @@ spec:
           - templateName: {{ include "rollouts-demo.name" . }}-health
         args:
           {{- if .Values.analysis.prometheus.address }}
-          - name: canary-service
-            value: {{ include "rollouts-demo.name" . }}-preview
+          - name: route-name
+            value: {{ include "rollouts-demo.name" . }}
           {{- else }}
           - name: canary-url
             value: http://{{ include "rollouts-demo.name" . }}-preview.{{ .Release.Namespace }}.svc.cluster.local/color
@@ -87,8 +87,8 @@ spec:
         startingStep: {{ .Values.analysis.startingStep }}
         args:
           {{- if .Values.analysis.prometheus.address }}
-          - name: canary-service
-            value: {{ include "rollouts-demo.name" . }}-canary
+          - name: route-name
+            value: {{ include "rollouts-demo.name" . }}
           {{- else }}
           - name: canary-url
             value: http://{{ include "rollouts-demo.name" . }}-canary.{{ .Release.Namespace }}.svc.cluster.local/color

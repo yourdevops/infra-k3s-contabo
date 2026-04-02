@@ -8,7 +8,7 @@ metadata:
 spec:
   args:
     {{- if .Values.analysis.prometheus.address }}
-    - name: canary-service
+    - name: route-name
     {{- else }}
     - name: canary-url
     {{- end }}
@@ -28,9 +28,9 @@ spec:
             {{- if .Values.analysis.prometheus.query }}
             {{ .Values.analysis.prometheus.query | nindent 12 }}
             {{- else }}
-            sum(rate(envoy_cluster_upstream_rq_xx{envoy_cluster_name=~".*{{ "{{args.canary-service}}" }}.*",envoy_response_code_class="2"}[1m]))
+            sum(rate(envoy_cluster_upstream_rq_xx{envoy_cluster_name=~".*{{ "{{args.route-name}}" }}.*",envoy_response_code_class="2"}[1m]))
             /
-            sum(rate(envoy_cluster_upstream_rq_xx{envoy_cluster_name=~".*{{ "{{args.canary-service}}" }}.*"}[1m]))
+            sum(rate(envoy_cluster_upstream_rq_xx{envoy_cluster_name=~".*{{ "{{args.route-name}}" }}.*"}[1m]))
             {{- end }}
     {{- else }}
     - name: http-success
