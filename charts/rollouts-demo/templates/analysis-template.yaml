@@ -1,20 +1,43 @@
 {{- if .Values.analysis.enabled }}
+{{- if .Values.analysis.prometheus.address }}
+# Canary-specific check — queries the managed header route (rule/1), active during header-based testing
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
-  name: {{ include "rollouts-demo.name" . }}-health
+  name: {{ include "rollouts-demo.name" . }}-canary-health
   labels:
     {{- include "rollouts-demo.labels" . | nindent 4 }}
 spec:
   args:
-    {{- if .Values.analysis.prometheus.address }}
     - name: route-name
-    {{- else }}
-    - name: canary-url
-    {{- end }}
   metrics:
-    {{- if .Values.analysis.prometheus.address }}
-    - name: success-rate
+    - name: canary-success-rate
+      interval: {{ .Values.analysis.interval }}
+      {{- with .Values.analysis.count }}
+      count: {{ . }}
+      {{- end }}
+      failureLimit: {{ .Values.analysis.failureLimit }}
+      successCondition: "len(result) == 0 || result[0] >= {{ .Values.analysis.prometheus.successThreshold }}"
+      provider:
+        prometheus:
+          address: {{ .Values.analysis.prometheus.address }}
+          query: |
+            sum(rate(envoy_cluster_upstream_rq_xx{envoy_cluster_name=~".*{{ "{{args.route-name}}" }}/rule/1",envoy_response_code_class="2"}[1m]))
+            /
+            sum(rate(envoy_cluster_upstream_rq_xx{envoy_cluster_name=~".*{{ "{{args.route-name}}" }}/rule/1"}[1m]))
+---
+# Blended route check — queries the main weighted route (rule/0), effective during progressive rollout
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: {{ include "rollouts-demo.name" . }}-success-rate
+  labels:
+    {{- include "rollouts-demo.labels" . | nindent 4 }}
+spec:
+  args:
+    - name: route-name
+  metrics:
+    - name: route-success-rate
       interval: {{ .Values.analysis.interval }}
       {{- with .Values.analysis.count }}
       count: {{ . }}
@@ -28,11 +51,22 @@ spec:
             {{- if .Values.analysis.prometheus.query }}
             {{ .Values.analysis.prometheus.query | nindent 12 }}
             {{- else }}
-            sum(rate(envoy_cluster_upstream_rq_xx{envoy_cluster_name=~".*{{ "{{args.route-name}}" }}.*",envoy_response_code_class="2"}[1m]))
+            sum(rate(envoy_cluster_upstream_rq_xx{envoy_cluster_name=~".*{{ "{{args.route-name}}" }}/rule/0",envoy_response_code_class="2"}[1m]))
             /
-            sum(rate(envoy_cluster_upstream_rq_xx{envoy_cluster_name=~".*{{ "{{args.route-name}}" }}.*"}[1m]))
+            sum(rate(envoy_cluster_upstream_rq_xx{envoy_cluster_name=~".*{{ "{{args.route-name}}" }}/rule/0"}[1m]))
             {{- end }}
-    {{- else }}
+{{- else }}
+# Web health check fallback (when prometheus is not configured)
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: {{ include "rollouts-demo.name" . }}-health
+  labels:
+    {{- include "rollouts-demo.labels" . | nindent 4 }}
+spec:
+  args:
+    - name: canary-url
+  metrics:
     - name: http-success
       interval: {{ .Values.analysis.interval }}
       {{- with .Values.analysis.count }}
@@ -43,5 +77,5 @@ spec:
         web:
           url: "{{ "{{args.canary-url}}" }}"
           timeoutSeconds: 3
-    {{- end }}
+{{- end }}
 {{- end }}

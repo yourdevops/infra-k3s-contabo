@@ -50,7 +50,11 @@ spec:
       {{- if .Values.analysis.enabled }}
       prePromotionAnalysis:
         templates:
+          {{- if .Values.analysis.prometheus.address }}
+          - templateName: {{ include "rollouts-demo.name" . }}-success-rate
+          {{- else }}
           - templateName: {{ include "rollouts-demo.name" . }}-health
+          {{- end }}
         args:
           {{- if .Values.analysis.prometheus.address }}
           - name: route-name
@@ -83,7 +87,12 @@ spec:
       {{- if .Values.analysis.enabled }}
       analysis:
         templates:
+          {{- if .Values.analysis.prometheus.address }}
+          - templateName: {{ include "rollouts-demo.name" . }}-canary-health
+          - templateName: {{ include "rollouts-demo.name" . }}-success-rate
+          {{- else }}
           - templateName: {{ include "rollouts-demo.name" . }}-health
+          {{- end }}
         startingStep: {{ .Values.analysis.startingStep }}
         args:
           {{- if .Values.analysis.prometheus.address }}
