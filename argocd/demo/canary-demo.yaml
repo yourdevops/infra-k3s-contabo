@@ -21,7 +21,7 @@ spec:
         # ── Demo toggles ────────────────────────────────────────
         image:
           repository: argoproj/rollouts-demo
-          tag: green                      # blue, green, yellow, purple, orange, red -- all with bad-/slow- prefixes available
+          tag: blue                      # blue, green, yellow, purple, orange, red -- all with bad-/slow- prefixes available
         replicas: 10
         strategy: canary
         hostname: canary-demo.yourdevops.me
@@ -54,9 +54,9 @@ spec:
             - name: header-route
           steps:
             # OPTIONAL Phase 1 — header-based testing (Firefox only)
-            # - setCanaryScale:              # PR-159 bug workaround
+            # - setCanaryScale:
             #     replicas: 1                # spin up a single canary pod
-            - setWeight: 1                 # minimal traffic split - bug in controller does not allow to not set it (otherwise it falls back to 0 meaning no traffic at all goes to canary)
+            # - setWeight: 1                 # minimal traffic split - bug in controller does not allow to not set it (otherwise it falls back to 0 meaning no traffic at all goes to canary)
             - setHeaderRoute:              # route Firefox traffic to canary
                 name: header-route
                 match:
