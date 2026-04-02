@@ -21,7 +21,7 @@ spec:
         # ── Demo toggles ────────────────────────────────────────
         image:
           repository: argoproj/rollouts-demo
-          tag: blue                      # blue, green, yellow, purple, orange, red -- all with bad-/slow- prefixes available
+          tag: green                      # blue, green, yellow, purple, orange, red -- all with bad-/slow- prefixes available
         replicas: 5
         strategy: canary
         hostname: canary-demo.yourdevops.me
@@ -69,9 +69,9 @@ spec:
             - pause: {}                    # manual gate — verify via Firefox before proceeding
 
             # Phase 2 — progressive weighted rollout
+            - setWeight: 5
             - setCanaryScale:
                 matchTrafficWeight: true   # canary pods scale with traffic %
-            - setWeight: 5
             - pause:
                 duration: 30s
             - setWeight: 20
