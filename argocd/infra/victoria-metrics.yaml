@@ -21,12 +21,12 @@ spec:
           retentionPeriod: "7d"
           resources:
             requests:
-              cpu: 50m
-              memory: 128Mi
+              cpu: 100m
+              memory: 512Mi
             limits:
-              memory: 256Mi
+              memory: 1Gi
           persistentVolume:
-            size: 2Gi
+            size: 10Gi
           scrape:
             enabled: true
   destination:
