@@ -11,6 +11,15 @@ spec:
     type: Kubernetes
     kubernetes:
       envoyDeployment:
+        replicas: 2
+        container:
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: "1"
+              memory: 256Mi
         pod:
           annotations:
             prometheus.io/scrape: "true"
