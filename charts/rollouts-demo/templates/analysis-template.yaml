@@ -1,36 +1,9 @@
-{{- if .Values.analysis.enabled }}
-{{- if .Values.analysis.prometheus.address }}
-# Canary-specific check — queries the managed header route (rule/1), active during header-based testing
+{{- if and .Values.analysisTemplate.globalSuccessRate.create .Values.analysisTemplate.globalSuccessRate.prometheus.address }}
+# Background check — queries the main weighted route (rule/0) via Envoy metrics
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
-  name: {{ include "rollouts-demo.name" . }}-canary-health
-  labels:
-    {{- include "rollouts-demo.labels" . | nindent 4 }}
-spec:
-  args:
-    - name: route-name
-  metrics:
-    - name: canary-success-rate
-      interval: {{ .Values.analysis.interval }}
-      {{- with .Values.analysis.count }}
-      count: {{ . }}
-      {{- end }}
-      failureLimit: {{ .Values.analysis.failureLimit }}
-      successCondition: "len(result) == 0 || result[0] >= {{ .Values.analysis.prometheus.successThreshold }}"
-      provider:
-        prometheus:
-          address: {{ .Values.analysis.prometheus.address }}
-          query: |
-            sum(rate(envoy_cluster_upstream_rq_xx{envoy_cluster_name=~".*{{ "{{args.route-name}}" }}/rule/1",envoy_response_code_class="2"}[1m]))
-            /
-            sum(rate(envoy_cluster_upstream_rq_xx{envoy_cluster_name=~".*{{ "{{args.route-name}}" }}/rule/1"}[1m]))
----
-# Blended route check — queries the main weighted route (rule/0), effective during progressive rollout
-apiVersion: argoproj.io/v1alpha1
-kind: AnalysisTemplate
-metadata:
-  name: {{ include "rollouts-demo.name" . }}-success-rate
+  name: {{ include "rollouts-demo.name" . }}-global-success-rate
   labels:
     {{- include "rollouts-demo.labels" . | nindent 4 }}
 spec:
@@ -38,44 +11,42 @@ spec:
     - name: route-name
   metrics:
     - name: route-success-rate
-      interval: {{ .Values.analysis.interval }}
-      {{- with .Values.analysis.count }}
+      interval: {{ .Values.analysisTemplate.globalSuccessRate.interval }}
+      {{- with .Values.analysisTemplate.globalSuccessRate.count }}
       count: {{ . }}
       {{- end }}
-      failureLimit: {{ .Values.analysis.failureLimit }}
-      successCondition: "len(result) == 0 || result[0] >= {{ .Values.analysis.prometheus.successThreshold }}"
+      failureLimit: {{ .Values.analysisTemplate.globalSuccessRate.failureLimit }}
+      successCondition: "len(result) == 0 || result[0] >= {{ .Values.analysisTemplate.globalSuccessRate.prometheus.successThreshold }}"
       provider:
         prometheus:
-          address: {{ .Values.analysis.prometheus.address }}
+          address: {{ .Values.analysisTemplate.globalSuccessRate.prometheus.address }}
           query: |
-            {{- if .Values.analysis.prometheus.query }}
-            {{ .Values.analysis.prometheus.query | nindent 12 }}
+            {{- if .Values.analysisTemplate.globalSuccessRate.prometheus.query }}
+            {{ .Values.analysisTemplate.globalSuccessRate.prometheus.query | nindent 12 }}
             {{- else }}
             sum(rate(envoy_cluster_upstream_rq_xx{envoy_cluster_name=~".*{{ "{{args.route-name}}" }}/rule/0",envoy_response_code_class="2"}[1m]))
             /
             sum(rate(envoy_cluster_upstream_rq_xx{envoy_cluster_name=~".*{{ "{{args.route-name}}" }}/rule/0"}[1m]))
             {{- end }}
-{{- else }}
-# Web health check fallback (when prometheus is not configured)
+{{- end }}
+{{- if .Values.analysisTemplate.canaryProbe.create }}
+---
+# Direct canary pod probe — hits the canary service endpoint, bypasses Envoy metrics
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
-  name: {{ include "rollouts-demo.name" . }}-health
+  name: {{ include "rollouts-demo.name" . }}-canary-probe
   labels:
     {{- include "rollouts-demo.labels" . | nindent 4 }}
 spec:
-  args:
-    - name: canary-url
   metrics:
-    - name: http-success
-      interval: {{ .Values.analysis.interval }}
-      {{- with .Values.analysis.count }}
-      count: {{ . }}
-      {{- end }}
-      failureLimit: {{ .Values.analysis.failureLimit }}
+    - name: canary-app-response
+      interval: {{ .Values.analysisTemplate.canaryProbe.interval }}
+      count: {{ .Values.analysisTemplate.canaryProbe.count }}
+      failureLimit: {{ .Values.analysisTemplate.canaryProbe.failureLimit }}
       provider:
         web:
-          url: "{{ "{{args.canary-url}}" }}"
-          timeoutSeconds: 3
-{{- end }}
+          url: "http://{{ include "rollouts-demo.name" . }}-canary.{{ .Release.Namespace }}.svc.cluster.local{{ .Values.analysisTemplate.canaryProbe.path }}"
+          method: {{ .Values.analysisTemplate.canaryProbe.method }}
+          timeoutSeconds: {{ .Values.analysisTemplate.canaryProbe.timeoutSeconds }}
 {{- end }}

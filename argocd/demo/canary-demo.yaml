@@ -37,38 +37,52 @@ spec:
         migrationJob:
           enabled: true
 
-        # ── Automated analysis ──────────────────────────────────
-        analysis:
-          enabled: true                    # creates an AnalysisTemplate + inline backgroundAnalysis  
-          interval: 10s
-          failureLimit: 1
-          startingStep: 2                  # analysis begins at the header phase (step 2: setHeaderRoute)
-          prometheus:
-            address: http://victoria-metrics-server.victoria-metrics.svc.cluster.local:8428
-            successThreshold: 0.95
+        # ── AnalysisTemplates ───────────────────────────────────
+        analysisTemplate:
+          globalSuccessRate:               # background — Envoy weighted route metrics (stable + canary) via Prometheus
+            create: true
+            interval: 5s
+            failureLimit: 2
+            startingStep: 2                # step index where background analysis begins
+            prometheus:
+              address: http://victoria-metrics-server.victoria-metrics.svc.cluster.local:8428
+              successThreshold: 0.95
+          canaryProbe:                     # inline — direct HTTP probe of canary pod
+            create: true
+            method: GET                    # GET or POST; GET uses env-var error simulation only
+            path: /color                   # rollouts-demo endpoint (returns 200 or 500)
+            timeoutSeconds: 3
+            count: 5                       # probes per run (inline must be finite)
+            interval: 10s
+            failureLimit: 2
 
         # ── Canary strategy ─────────────────────────────────────
+        # https://argo-rollouts.readthedocs.io/en/stable/features/specification/
         canary:
           dynamicStableScale: true         # scale down stable pods as canary weight increases
-          # Header-based routing (Firefox → canary) is now handled by a standalone
-          # HTTPRoute (canary-header-route.yaml) instead of setHeaderRoute.
-          # This ensures Firefox gets 100% canary throughout the entire rollout.
-          # managedRoutes:
-          #   - name: header-route
-          managedRoutes: []
+          # Header-based routing (Firefox -> canary). This only works during Phase 1.
+          # To ensure that Firefox gets 100% canary throughout the entire rollout, need to use a standalone HTTPRoute (canary-header-route.yaml)
+          managedRoutes:
+            - name: header-route
           steps:
-            # Phase 1 — header-based testing (Firefox → canary via standalone HTTPRoute)
+            # PHASE 1 — header-based testing (Firefox -> canary) and automated analysis gate
             - setCanaryScale:
                 replicas: 1                # spin up a single canary pod
-            # - setHeaderRoute:              # replaced by canary-header-route.yaml
-            #     name: header-route
-            #     match:
-            #       - headerName: User-Agent
-            #         headerValue:
-            #           regex: ".*Firefox.*"
-            - pause: {}                    # manual gate — verify via Firefox before proceeding
+            - setHeaderRoute:
+                name: header-route         # based on custom header, route traffic to the canary
+                match:
+                  - headerName: User-Agent
+                    headerValue:
+                      regex: ".*Firefox.*"
 
-            # Phase 2 — progressive weighted rollout
+            # Automated gate — probe canary pod directly before shifting traffic
+            - analysis:
+                templates:
+                  - templateName: canary-demo-canary-probe
+            - pause: {}                    # verify canary manually via Firefox before proceeding
+                # duration: 2m             # OR let it continue unattended after soaking for a couple of minutes
+
+            # PHASE 2 — progressive weighted rollout
             - setWeight: 5
             - setCanaryScale:
                 matchTrafficWeight: true   # canary pods scale with traffic %

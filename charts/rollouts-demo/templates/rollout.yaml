@@ -47,22 +47,13 @@ spec:
       activeService: {{ include "rollouts-demo.name" . }}-active
       previewService: {{ include "rollouts-demo.name" . }}-preview
       autoPromotionEnabled: {{ .Values.blueGreen.autoPromotionEnabled }}
-      {{- if .Values.analysis.enabled }}
+      {{- if and .Values.analysisTemplate.globalSuccessRate.create .Values.analysisTemplate.globalSuccessRate.prometheus.address }}
       prePromotionAnalysis:
         templates:
-          {{- if .Values.analysis.prometheus.address }}
-          - templateName: {{ include "rollouts-demo.name" . }}-success-rate
-          {{- else }}
-          - templateName: {{ include "rollouts-demo.name" . }}-health
-          {{- end }}
+          - templateName: {{ include "rollouts-demo.name" . }}-global-success-rate
         args:
-          {{- if .Values.analysis.prometheus.address }}
           - name: route-name
             value: {{ include "rollouts-demo.name" . }}
-          {{- else }}
-          - name: canary-url
-            value: http://{{ include "rollouts-demo.name" . }}-preview.{{ .Release.Namespace }}.svc.cluster.local/color
-          {{- end }}
       {{- end }}
     {{- else }}
     canary:
@@ -84,23 +75,13 @@ spec:
         {{- end }}
       steps:
         {{- toYaml .Values.canary.steps | nindent 8 }}
-      {{- if .Values.analysis.enabled }}
+      {{- if and .Values.analysisTemplate.globalSuccessRate.create .Values.analysisTemplate.globalSuccessRate.prometheus.address }}
       analysis:
         templates:
-          {{- if .Values.analysis.prometheus.address }}
-          - templateName: {{ include "rollouts-demo.name" . }}-canary-health
-          - templateName: {{ include "rollouts-demo.name" . }}-success-rate
-          {{- else }}
-          - templateName: {{ include "rollouts-demo.name" . }}-health
-          {{- end }}
-        startingStep: {{ .Values.analysis.startingStep }}
+          - templateName: {{ include "rollouts-demo.name" . }}-global-success-rate
+        startingStep: {{ .Values.analysisTemplate.globalSuccessRate.startingStep }}
         args:
-          {{- if .Values.analysis.prometheus.address }}
           - name: route-name
             value: {{ include "rollouts-demo.name" . }}
-          {{- else }}
-          - name: canary-url
-            value: http://{{ include "rollouts-demo.name" . }}-canary.{{ .Release.Namespace }}.svc.cluster.local/color
-          {{- end }}
       {{- end }}
     {{- end }}

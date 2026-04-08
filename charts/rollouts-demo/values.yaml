@@ -50,13 +50,21 @@ blueGreen:
 migrationJob:
   enabled: false
 
-analysis:
-  enabled: false
-  interval: 10s
-  failureLimit: 1
-  startingStep: 2
-  # Prometheus-based analysis (replaces web provider when set)
-  prometheus:
-    address: ""           # e.g. http://victoria-metrics-server.victoria-metrics.svc.cluster.local:8428
-    query: ""             # custom PromQL query (optional, uses default success-rate query if empty)
-    successThreshold: 0.95
+analysisTemplate:
+  globalSuccessRate:
+    create: false
+    interval: 10s
+    failureLimit: 1
+    startingStep: 2
+    prometheus:
+      address: ""           # e.g. http://victoria-metrics-server.victoria-metrics.svc.cluster.local:8428
+      query: ""             # custom PromQL (optional, uses default Envoy success-rate query if empty)
+      successThreshold: 0.95
+  canaryProbe:
+    create: false
+    method: GET             # GET or POST; GET triggers env-var-based error simulation
+    path: /color            # app endpoint to probe (returns 200 or 500)
+    timeoutSeconds: 3
+    count: 5                # probes per run (inline analysis must be finite)
+    interval: 10s
+    failureLimit: 1
