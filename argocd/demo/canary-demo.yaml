@@ -52,9 +52,9 @@ spec:
             method: GET                    # GET or POST; GET uses env-var error simulation only
             path: /color                   # rollouts-demo endpoint (returns 200 or 500)
             timeoutSeconds: 3
-            count: 5                       # probes per run (inline must be finite)
-            interval: 10s
-            failureLimit: 2
+            count: 60                       # probes per run (inline must be finite)
+            interval: 1s
+            failureLimit: 3
 
         # ── Canary strategy ─────────────────────────────────────
         # https://argo-rollouts.readthedocs.io/en/stable/features/specification/
