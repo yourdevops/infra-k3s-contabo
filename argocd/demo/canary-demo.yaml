@@ -103,6 +103,11 @@ spec:
       kind: Service
       jqPathExpressions:
         - .spec.selector["rollouts-pod-template-hash"]
+    - group: argoproj.io
+      kind: Rollout
+      jqPathExpressions:
+        - .spec.strategy.canary.analysis.analysisRunMetadata
+        - .spec.strategy.canary.steps[].analysis.analysisRunMetadata
   destination:
     server: https://kubernetes.default.svc
     namespace: canary-demo
@@ -113,3 +118,4 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+      - RespectIgnoreDifferences=true
