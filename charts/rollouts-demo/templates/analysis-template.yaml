@@ -10,7 +10,7 @@ spec:
   args:
     - name: route-name
   metrics:
-    - name: route-success-rate
+    - name: global-success-rate
       interval: {{ .Values.analysisTemplate.globalSuccessRate.interval }}
       {{- with .Values.analysisTemplate.globalSuccessRate.count }}
       count: {{ . }}
@@ -40,7 +40,7 @@ metadata:
     {{- include "rollouts-demo.labels" . | nindent 4 }}
 spec:
   metrics:
-    - name: canary-app-response
+    - name: canary-probe
       interval: {{ .Values.analysisTemplate.canaryProbe.interval }}
       count: {{ .Values.analysisTemplate.canaryProbe.count }}
       failureLimit: {{ .Values.analysisTemplate.canaryProbe.failureLimit }}

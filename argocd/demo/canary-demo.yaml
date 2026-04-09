@@ -21,7 +21,7 @@ spec:
         # ── Demo toggles ────────────────────────────────────────
         image:
           repository: argoproj/rollouts-demo
-          tag: bad-yellow                    # blue, green, yellow, purple, orange, red -- all with bad-/slow- prefixes available
+          tag: blue                    # blue, green, yellow, purple, orange, red -- all with bad-/slow- prefixes available
         replicas: 5
         strategy: canary
         hostname: canary-demo.yourdevops.me
@@ -76,10 +76,10 @@ spec:
                       regex: ".*Firefox.*"
 
             # Automated gate — probe canary pod directly before shifting traffic
-            # - analysis:
-            #     templates:
-            #       - templateName: canary-demo-canary-probe
-            - pause: {}                    # verify canary manually via Firefox before proceeding
+            - analysis:
+                templates:
+                  - templateName: canary-demo-canary-probe
+            - pause: {}                    # verify canary manually via Firefox, for demo purposes, before proceeding
                 # duration: 2m             # OR let it continue unattended after soaking for a couple of minutes
 
             # PHASE 2 — progressive weighted rollout
