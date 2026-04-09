@@ -56,6 +56,28 @@ spec:
             interval: 1s
             failureLimit: 3
 
+        # ── KEDA autoscaling ─────────────────────────────────────
+        # Requires: KEDA operator (argocd/infra/keda.yaml)
+        # Requires: instrumented image exposing /metrics with http_requests_total
+        # Disabled until the instrumented image is published to GHCR.
+        keda:
+          enabled: false
+          minReplicas: 3
+          maxReplicas: 15
+          pollingInterval: 15
+          cooldownPeriod: 120
+          triggers:
+            - type: prometheus
+              metadata:
+                serverAddress: http://victoria-metrics-server.victoria-metrics.svc.cluster.local:8428
+                query: sum(rate(http_requests_total{namespace="canary-demo"}[1m]))
+                threshold: "50"
+                activationThreshold: "5"
+            - type: cpu
+              metricType: Utilization
+              metadata:
+                value: "70"
+
         # ── Canary strategy ─────────────────────────────────────
         # https://argo-rollouts.readthedocs.io/en/stable/features/specification/
         canary:

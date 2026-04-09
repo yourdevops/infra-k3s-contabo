@@ -43,6 +43,55 @@ canary:
         duration: 30s
   managedRoutes: []
 
+# ── KEDA autoscaling ────────────────────────────────────────────
+# Requires KEDA operator in the cluster (argocd/infra/keda.yaml).
+# Creates a ScaledObject that targets the Rollout's /scale subresource.
+# KEDA manages the HPA — do NOT create a separate HPA resource.
+keda:
+  enabled: false
+  minReplicas: 3
+  maxReplicas: 10
+  pollingInterval: 15                   # how often KEDA checks metrics (seconds)
+  cooldownPeriod: 120                   # seconds before scaling down after last trigger
+  triggers:
+    # RPS from app-level Prometheus metrics (requires instrumented image)
+    - type: prometheus
+      metadata:
+        serverAddress: http://victoria-metrics-server.victoria-metrics.svc.cluster.local:8428
+        query: sum(rate(http_requests_total{namespace="canary-demo"}[1m]))
+        threshold: "50"                 # target RPS per replica
+        activationThreshold: "5"        # don't activate below 5 RPS total
+    # CPU as a safety net alongside RPS
+    - type: cpu
+      metricType: Utilization
+      metadata:
+        value: "70"
+    # Memory as a safety net
+    - type: memory
+      metricType: Utilization
+      metadata:
+        value: "80"
+  advanced:
+    horizontalPodAutoscalerConfig:
+      behavior:
+        scaleUp:
+          stabilizationWindowSeconds: 30
+          policies:
+            - type: Percent
+              value: 50
+              periodSeconds: 30
+            - type: Pods
+              value: 2
+              periodSeconds: 30
+          selectPolicy: Max
+        scaleDown:
+          stabilizationWindowSeconds: 120
+          policies:
+            - type: Percent
+              value: 25
+              periodSeconds: 60
+          selectPolicy: Max
+
 blueGreen:
   autoPromotionEnabled: false
   previewHostname: ""

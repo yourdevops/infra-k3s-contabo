@@ -57,3 +57,27 @@ spec:
       targetPort: http
       protocol: TCP
 {{- end }}
+{{- /*
+  Internal "all-pods" service — NOT referenced by the Rollout, so the controller
+  never patches its selector.  During a canary rollout it round-robins across
+  both stable and canary pods.  With dynamicStableScale + matchTrafficWeight the
+  pod ratio tracks the setWeight steps, so the traffic split approximates the
+  external Envoy-managed split without leaving the cluster network.
+
+  Usage: canary-demo-internal.canary-demo.svc.cluster.local
+*/ -}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "rollouts-demo.name" . }}-internal
+  labels:
+    {{- include "rollouts-demo.labels" . | nindent 4 }}
+    rollouts-demo/purpose: internal-all-pods
+spec:
+  selector:
+    {{- include "rollouts-demo.selectorLabels" . | nindent 4 }}
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
