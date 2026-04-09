@@ -60,8 +60,8 @@ spec:
         # https://argo-rollouts.readthedocs.io/en/stable/features/specification/
         canary:
           dynamicStableScale: true         # scale down stable pods as canary weight increases
-          # Header-based routing (Firefox -> canary). This only works during Phase 1.
-          # To ensure that Firefox gets 100% canary throughout the entire rollout, need to use a standalone HTTPRoute (canary-header-route.yaml)
+          # Header-based routing (Firefox -> canary).
+          # Firefox gets 100% canary throughout the entire rollout.
           managedRoutes:
             - name: header-route
           steps:
