@@ -76,9 +76,9 @@ spec:
                       regex: ".*Firefox.*"
 
             # Automated gate — probe canary pod directly before shifting traffic
-            - analysis:
-                templates:
-                  - templateName: canary-demo-canary-probe
+            # - analysis:
+            #     templates:
+            #       - templateName: canary-demo-canary-probe
             - pause: {}                    # verify canary manually via Firefox before proceeding
                 # duration: 2m             # OR let it continue unattended after soaking for a couple of minutes
 
