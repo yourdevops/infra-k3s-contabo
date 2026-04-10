@@ -53,20 +53,6 @@ spec:
             periodSeconds: 10
             failureThreshold: 3
   strategy:
-    {{- if eq .Values.strategy "blueGreen" }}
-    blueGreen:
-      activeService: {{ include "rollouts-demo.name" . }}-active
-      previewService: {{ include "rollouts-demo.name" . }}-preview
-      autoPromotionEnabled: {{ .Values.blueGreen.autoPromotionEnabled }}
-      {{- if and .Values.analysisTemplate.globalSuccessRate.create .Values.analysisTemplate.globalSuccessRate.prometheus.address }}
-      prePromotionAnalysis:
-        templates:
-          - templateName: {{ include "rollouts-demo.name" . }}-global-success-rate
-        args:
-          - name: route-name
-            value: {{ include "rollouts-demo.name" . }}
-      {{- end }}
-    {{- else }}
     canary:
       dynamicStableScale: {{ .Values.canary.dynamicStableScale }}
       canaryService: {{ include "rollouts-demo.name" . }}-canary
@@ -95,4 +81,3 @@ spec:
           - name: route-name
             value: {{ include "rollouts-demo.name" . }}
       {{- end }}
-    {{- end }}

@@ -7,9 +7,6 @@ resources: {}
 
 replicas: 3
 
-# canary | blueGreen
-strategy: canary
-
 gateway:
   enabled: false
   name: ""
@@ -95,10 +92,6 @@ keda:
               value: 25
               periodSeconds: 60
           selectPolicy: Max
-
-blueGreen:
-  autoPromotionEnabled: false
-  previewHostname: ""
 
 migrationJob:
   enabled: false

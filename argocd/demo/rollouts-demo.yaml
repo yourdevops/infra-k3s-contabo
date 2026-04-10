@@ -2,7 +2,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: canary-demo
+  name: rollouts-demo
   namespace: argocd
   annotations:
     argocd.argoproj.io/sync-wave: "3"
@@ -15,7 +15,7 @@ spec:
     targetRevision: main
     path: charts/rollouts-demo
     helm:
-      releaseName: canary-demo
+      releaseName: rollouts-demo
       valuesObject:
 
         # ── Demo toggles ────────────────────────────────────────
@@ -24,8 +24,7 @@ spec:
           tag: blue                    # blue, green, yellow, purple, orange, red -- all with bad-/slow- prefixes available
           pullPolicy: Always
         replicas: 1
-        strategy: canary
-        hostname: canary-demo.yourdevops.me
+        hostname: rollouts-demo.yourdevops.me
 
         # ── OTel → Collector → VictoriaMetrics ──
         # OTEL_SERVICE_NAME is set automatically from Release.Name in the chart
@@ -63,9 +62,9 @@ spec:
               address: http://victoria-metrics-server.victoria-metrics.svc.cluster.local:8428
               # VM keeps OTel dot notation — quote metric/label names in PromQL
               query: |
-                sum(rate({__name__="http.server.request.duration_count", "service.name"="canary-demo", "http.response.status_code"=~"2.."}[1m]))
+                sum(rate({__name__="http.server.request.duration_count", "service.name"="rollouts-demo", "http.response.status_code"=~"2.."}[1m]))
                 /
-                sum(rate({__name__="http.server.request.duration_count", "service.name"="canary-demo"}[1m]))
+                sum(rate({__name__="http.server.request.duration_count", "service.name"="rollouts-demo"}[1m]))
               successThreshold: 0.95
           canaryProbe:                     # inline — direct HTTP probe of canary pod
             create: true
@@ -89,7 +88,7 @@ spec:
             - type: prometheus
               metadata:
                 serverAddress: http://victoria-metrics-server.victoria-metrics.svc.cluster.local:8428
-                query: sum(rate({__name__="http.server.request.duration_count", "service.name"="canary-demo"}[1m]))
+                query: sum(rate({__name__="http.server.request.duration_count", "service.name"="rollouts-demo"}[1m]))
                 threshold: "310"
                 activationThreshold: "5"
             - type: cpu
@@ -119,7 +118,7 @@ spec:
             # Automated gate — probe canary pod directly before shifting traffic
             - analysis:
                 templates:
-                  - templateName: canary-demo-canary-probe
+                  - templateName: rollouts-demo-canary-probe
             - pause: {}                    # verify canary manually via Firefox, for demo purposes, before proceeding
                 # duration: 2m             # OR let it continue unattended after soaking for a couple of minutes
 
@@ -151,7 +150,7 @@ spec:
         - .spec.strategy.canary.steps[].analysis.analysisRunMetadata
   destination:
     server: https://kubernetes.default.svc
-    namespace: canary-demo
+    namespace: rollouts-demo
   syncPolicy:
     automated:
       selfHeal: false
