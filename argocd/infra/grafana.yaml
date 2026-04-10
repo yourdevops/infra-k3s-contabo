@@ -77,7 +77,7 @@ spec:
                         "name": "version",
                         "type": "query",
                         "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
-                        "query": "label_values({__name__=\"http.server.active_requests\", \"service.name\"=\"rollouts-demo\"}, \"service.version\")",
+                        "query": "label_values(kube_pod_labels{exported_namespace=\"rollouts-demo\", label_app_kubernetes_io_name=\"rollouts-demo\", label_app_kubernetes_io_version!=\"\"}, label_app_kubernetes_io_version)",
                         "refresh": 2,
                         "multi": true,
                         "includeAll": true,
