@@ -30,9 +30,25 @@ kubectl argo rollouts abort rollouts-demo -n rollouts-demo          # abort
 kubectl argo rollouts retry rollout rollouts-demo -n rollouts-demo  # retry
 ```
 
-## Load testing (single-pod saturation)
+## Load testing
+
+### hey (recommended for autoscaling tests)
+
+Uses [hey](https://github.com/rakyll/hey) with `-disable-keepalive` so new connections
+are distributed evenly across all pods, including ones added by KEDA mid-test.
+
+```bash
+# Sustained load — 200 concurrent, 5 minutes, no keep-alive
+kubectl run load-test --rm -it --restart=Never \
+  --image=williamyeh/hey:latest -n rollouts-demo -- \
+  -c 200 -z 300s -disable-keepalive http://rollouts-demo-internal/color
+```
+
+### wrk (for single-pod saturation)
 
 Uses `argoproj/load-tester` image with [wrk](https://github.com/wg/wrk) built in.
+wrk uses persistent connections, so new pods added mid-test won't receive traffic
+until wrk is restarted.
 
 ```bash
 # 1. Scale to a single replica (disable autoscaler before that!)
@@ -54,8 +70,6 @@ Set KEDA threshold to ~70% of the RPS where latency starts degrading.
 
 - https://rollouts-demo.yourdevops.me
 - https://grafana.yourdevops.me
-- https://bg-demo.yourdevops.me
-- https://bg-demo-preview.yourdevops.me
 
 
 ## Kube-Proxy
