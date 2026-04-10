@@ -28,7 +28,7 @@ spec:
             memory: 256Mi
           limits:
             cpu: "1"
-            memory: 512Mi
+            memory: 2Gi
 
         # Preset: adds k8sattributes RBAC + processor config automatically
         presets:
@@ -74,6 +74,15 @@ spec:
                 receivers: [otlp]
                 processors: [k8sattributes, batch]
                 exporters: [otlphttp/victoriametrics]
+              # Override defaults to remove disabled jaeger/zipkin receivers
+              traces:
+                receivers: [otlp]
+                processors: [k8sattributes, batch]
+                exporters: [debug]
+              logs:
+                receivers: [otlp]
+                processors: [k8sattributes, batch]
+                exporters: [debug]
 
   destination:
     server: https://kubernetes.default.svc
