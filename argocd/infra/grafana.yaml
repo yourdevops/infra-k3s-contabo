@@ -27,7 +27,8 @@ spec:
             memory: 1Gi
 
         persistence:
-          enabled: false
+          enabled: true
+          size: 5Gi
 
         grafana.ini:
           auth.anonymous:
