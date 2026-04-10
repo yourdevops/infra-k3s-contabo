@@ -41,3 +41,4 @@ terraform.rc
 # Ansible vault password file
 .vault-pass
 
+*.md
