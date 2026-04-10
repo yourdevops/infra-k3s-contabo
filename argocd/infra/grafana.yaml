@@ -152,7 +152,8 @@ spec:
                       "title": "Replicas",
                       "gridPos": { "h": 8, "w": 8, "x": 16, "y": 10 },
                       "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
-                      "targets": [{ "expr": "count(count by (\"k8s.pod.name\") ({__name__=\"http.server.active_requests\", \"service.name\"=\"rollouts-demo\"}))", "legendFormat": "pods", "refId": "A" }],
+                      "targets": [{ "expr": "count by (\"service.version\") (count by (\"k8s.pod.name\", \"service.version\") ({__name__=\"http.server.active_requests\", \"service.name\"=\"rollouts-demo\"}))", "legendFormat": "{{service.version}}", "refId": "A" }],
+                      "options": { "legend": { "displayMode": "table", "calcs": ["lastNotNull"] } },
                       "fieldConfig": {
                         "defaults": {
                           "min": 0,

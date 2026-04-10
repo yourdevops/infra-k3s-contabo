@@ -25,6 +25,8 @@ spec:
           env:
             - name: OTEL_SERVICE_NAME
               value: {{ include "rollouts-demo.name" . }}
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: "service.version={{ .Values.image.tag }}"
             {{- with .Values.env }}
             {{- toYaml . | nindent 12 }}
             {{- end }}

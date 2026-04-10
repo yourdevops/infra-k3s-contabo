@@ -56,3 +56,10 @@ Set KEDA threshold to ~70% of the RPS where latency starts degrading.
 - https://grafana.yourdevops.me
 - https://bg-demo.yourdevops.me
 - https://bg-demo-preview.yourdevops.me
+
+
+## Kube-Proxy
+
+```bash
+kubectl port-forward -n victoria-metrics victoria-metrics-server-0 8428:8428 --context k3s-yourdevops
+```
