@@ -27,11 +27,12 @@ spec:
         strategy: canary
         hostname: canary-demo.yourdevops.me
 
-        # ── OTel → VictoriaMetrics (OTLP HTTP push, no collector needed) ──
+        # ── OTel → Collector → VictoriaMetrics ──
         # OTEL_SERVICE_NAME is set automatically from Release.Name in the chart
+        # Collector enriches with k8s metadata (pod, namespace, node) via k8sattributesprocessor
         env:
           - name: OTEL_EXPORTER_OTLP_ENDPOINT
-            value: http://victoria-metrics-server.victoria-metrics.svc.cluster.local:8428/opentelemetry
+            value: http://otel-collector.otel-collector.svc.cluster.local:4318
         resources:
           requests:
             cpu: 100m

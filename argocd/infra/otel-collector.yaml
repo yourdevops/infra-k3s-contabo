@@ -1,0 +1,72 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: otel-collector
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
+    chart: opentelemetry-collector
+    targetRevision: "0.149.0"
+    helm:
+      valuesObject:
+        mode: daemonset
+        fullnameOverride: otel-collector
+
+        image:
+          repository: otel/opentelemetry-collector-k8s    # includes k8sattributesprocessor
+
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 100m
+            memory: 256Mi
+
+        # Preset: adds k8sattributes RBAC + processor config automatically
+        presets:
+          kubernetesAttributes:
+            enabled: true
+
+        config:
+          receivers:
+            otlp:
+              protocols:
+                grpc:
+                  endpoint: ${env:MY_POD_IP}:4317
+                http:
+                  endpoint: ${env:MY_POD_IP}:4318
+
+          processors:
+            batch:
+              send_batch_size: 1024
+              timeout: 5s
+
+          exporters:
+            otlphttp/victoriametrics:
+              endpoint: http://victoria-metrics-server.victoria-metrics.svc.cluster.local:8428/opentelemetry
+
+          service:
+            pipelines:
+              metrics:
+                receivers: [otlp]
+                processors: [k8sattributes, batch]
+                exporters: [otlphttp/victoriametrics]
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: otel-collector
+  syncPolicy:
+    automated:
+      selfHeal: false
+      prune: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
