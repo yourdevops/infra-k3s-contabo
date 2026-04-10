@@ -20,11 +20,24 @@ spec:
 
         # ── Demo toggles ────────────────────────────────────────
         image:
-          repository: argoproj/rollouts-demo
+          repository: ghcr.io/yourdevops/rollouts-demo
           tag: blue                    # blue, green, yellow, purple, orange, red -- all with bad-/slow- prefixes available
-        replicas: 5
+        replicas: 1
         strategy: canary
         hostname: canary-demo.yourdevops.me
+
+        # ── OTel → VictoriaMetrics (OTLP HTTP push, no collector needed) ──
+        # OTEL_SERVICE_NAME is set automatically from Release.Name in the chart
+        env:
+          - name: OTEL_EXPORTER_OTLP_ENDPOINT
+            value: http://victoria-metrics-server.victoria-metrics.svc.cluster.local:8428/opentelemetry
+        resources:
+          requests:
+            cpu: 100m
+            memory: 64Mi
+          limits:
+            cpu: 100m
+            memory: 64Mi
 
         # ── Gateway API routing ─────────────────────────────────
         gateway:
@@ -39,13 +52,19 @@ spec:
 
         # ── AnalysisTemplates ───────────────────────────────────
         analysisTemplate:
-          globalSuccessRate:               # background — Envoy weighted route metrics (stable + canary) via Prometheus
+          globalSuccessRate:               # background — OTel app success rate via VictoriaMetrics
             create: true
             interval: 5s
             failureLimit: 2
             startingStep: 2                # step index where background analysis begins
             prometheus:
               address: http://victoria-metrics-server.victoria-metrics.svc.cluster.local:8428
+              # OTel http.server.request.duration → http_server_request_duration_seconds in VM
+              # OTEL_SERVICE_NAME (= Release.Name) becomes the `job` label
+              query: |
+                sum(rate(http_server_request_duration_seconds_count{job="canary-demo", http_response_status_code=~"2.."}[1m]))
+                /
+                sum(rate(http_server_request_duration_seconds_count{job="canary-demo"}[1m]))
               successThreshold: 0.95
           canaryProbe:                     # inline — direct HTTP probe of canary pod
             create: true
@@ -57,11 +76,10 @@ spec:
             failureLimit: 3
 
         # ── KEDA autoscaling ─────────────────────────────────────
-        # Requires: KEDA operator (argocd/infra/keda.yaml)
-        # Requires: instrumented image exposing /metrics with http_requests_total
-        # Disabled until the instrumented image is published to GHCR.
+        # OTel metrics → VictoriaMetrics → KEDA (Prometheus trigger)
+        # http.server.request.duration _count gives RPS; CPU/memory as safety nets
         keda:
-          enabled: false
+          enabled: false                   # enable after load-testing single-pod saturation
           minReplicas: 3
           maxReplicas: 15
           pollingInterval: 15
@@ -70,7 +88,7 @@ spec:
             - type: prometheus
               metadata:
                 serverAddress: http://victoria-metrics-server.victoria-metrics.svc.cluster.local:8428
-                query: sum(rate(http_requests_total{namespace="canary-demo"}[1m]))
+                query: sum(rate(http_server_request_duration_seconds_count{job="canary-demo"}[1m]))
                 threshold: "50"
                 activationThreshold: "5"
             - type: cpu

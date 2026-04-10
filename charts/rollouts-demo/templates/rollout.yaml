@@ -23,6 +23,16 @@ spec:
       containers:
         - name: rollouts-demo
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: {{ include "rollouts-demo.name" . }}
+            {{- with .Values.env }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           ports:
             - name: http
               containerPort: 8080

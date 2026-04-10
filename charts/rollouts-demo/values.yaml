@@ -2,6 +2,9 @@ image:
   repository: argoproj/rollouts-demo
   tag: blue
 
+env: []
+resources: {}
+
 replicas: 3
 
 # canary | blueGreen
@@ -54,11 +57,13 @@ keda:
   pollingInterval: 15                   # how often KEDA checks metrics (seconds)
   cooldownPeriod: 120                   # seconds before scaling down after last trigger
   triggers:
-    # RPS from app-level Prometheus metrics (requires instrumented image)
+    # RPS from OTel metrics pushed to VictoriaMetrics (requires instrumented image + OTEL_EXPORTER_OTLP_ENDPOINT env var)
+    # VictoriaMetrics converts OTel http.server.request.duration → http_server_request_duration_seconds
+    # service.name resource attribute becomes the `job` label
     - type: prometheus
       metadata:
         serverAddress: http://victoria-metrics-server.victoria-metrics.svc.cluster.local:8428
-        query: sum(rate(http_requests_total{namespace="canary-demo"}[1m]))
+        query: sum(rate(http_server_request_duration_seconds_count{job="RELEASE_NAME"}[1m]))
         threshold: "50"                 # target RPS per replica
         activationThreshold: "5"        # don't activate below 5 RPS total
     # CPU as a safety net alongside RPS
