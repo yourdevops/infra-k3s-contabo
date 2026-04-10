@@ -21,9 +21,8 @@ spec:
         # ── Demo toggles ────────────────────────────────────────
         image:
           repository: ghcr.io/yourdevops/rollouts-demo
-          tag: blue                    # blue, green, yellow, purple, orange, red -- all with bad-/slow- prefixes available
+          tag: green                    # blue, green, yellow, purple, orange, red -- all with bad-/slow- prefixes available
           pullPolicy: Always
-        replicas: 1
         hostname: rollouts-demo.yourdevops.me
 
         # ── OTel → Collector → VictoriaMetrics ──
@@ -121,8 +120,8 @@ spec:
             - analysis:
                 templates:
                   - templateName: rollouts-demo-canary-probe
-            - pause: {}                    # verify canary manually via Firefox, for demo purposes, before proceeding
-                # duration: 2m             # OR let it continue unattended after soaking for a couple of minutes
+            - pause:                     # verify canary manually via Firefox, for demo purposes, before proceeding
+                duration: 30s            # OR let it continue unattended after soaking for a couple of minutes
 
             # PHASE 2 — progressive weighted rollout
             - setWeight: 5
@@ -134,8 +133,7 @@ spec:
             - pause:
                 duration: 30s
             - setWeight: 50
-            - pause:
-                duration: 30s
+            - pause: {}
             - setWeight: 80
             - pause:
                 duration: 30s

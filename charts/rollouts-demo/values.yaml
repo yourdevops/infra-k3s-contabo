@@ -5,7 +5,7 @@ image:
 env: []
 resources: {}
 
-replicas: 3
+# replicas: omit when KEDA manages scaling; set only for non-autoscaled deploys
 
 gateway:
   enabled: false

@@ -5,7 +5,9 @@ metadata:
   labels:
     {{- include "rollouts-demo.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.replicas }}
+  {{- with .Values.replicas }}
+  replicas: {{ . }}
+  {{- end }}
   revisionHistoryLimit: 2
   selector:
     matchLabels:
