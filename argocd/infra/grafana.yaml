@@ -30,6 +30,9 @@ spec:
           enabled: true
           size: 5Gi
 
+        initChownData:
+          enabled: false
+
         grafana.ini:
           auth.anonymous:
             enabled: true
