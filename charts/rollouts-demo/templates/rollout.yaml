@@ -15,7 +15,7 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "rollouts-demo.selectorLabels" . | nindent 8 }}
+        {{- include "rollouts-demo.labels" . | nindent 8 }}
     spec:
       terminationGracePeriodSeconds: 45
       containers:
