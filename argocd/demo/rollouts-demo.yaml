@@ -32,6 +32,8 @@ spec:
         env:
           - name: OTEL_EXPORTER_OTLP_ENDPOINT
             value: http://otel-collector.otel-collector.svc.cluster.local:4318
+          - name: OTEL_METRIC_EXPORT_INTERVAL
+            value: "15000"
         resources:
           requests:
             cpu: 100m
