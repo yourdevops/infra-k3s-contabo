@@ -22,6 +22,7 @@ spec:
         image:
           repository: ghcr.io/yourdevops/rollouts-demo
           tag: blue                    # blue, green, yellow, purple, orange, red -- all with bad-/slow- prefixes available
+          pullPolicy: Always
         replicas: 1
         strategy: canary
         hostname: canary-demo.yourdevops.me

@@ -14,15 +14,13 @@ spec:
     metadata:
       labels:
         {{- include "rollouts-demo.selectorLabels" . | nindent 8 }}
-      annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "8080"
-        prometheus.io/path: "/metrics"
+      annotations: {}
     spec:
       terminationGracePeriodSeconds: 45
       containers:
         - name: rollouts-demo
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
           env:
             - name: OTEL_SERVICE_NAME
               value: {{ include "rollouts-demo.name" . }}
