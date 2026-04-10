@@ -72,74 +72,15 @@ spec:
                   "refresh": "5s",
                   "schemaVersion": 39,
                   "time": { "from": "now-15m", "to": "now" },
-                  "templating": {
-                    "list": [
-                      {
-                        "name": "version",
-                        "type": "query",
-                        "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
-                        "query": "label_values(kube_pod_labels{exported_namespace=\"rollouts-demo\", label_app_kubernetes_io_name=\"rollouts-demo\", label_app_kubernetes_io_version!=\"\"}, label_app_kubernetes_io_version)",
-                        "refresh": 2,
-                        "multi": true,
-                        "includeAll": true,
-                        "current": { "text": "All", "value": "$__all" }
-                      }
-                    ]
-                  },
                   "panels": [
-                    {
-                      "id": 1,
-                      "type": "row",
-                      "title": "Overview",
-                      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
-                      "collapsed": false
-                    },
-                    {
-                      "id": 7,
-                      "type": "timeseries",
-                      "title": "Replicas",
-                      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 1 },
-                      "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
-                      "targets": [{ "expr": "count by (label_app_kubernetes_io_version) (kube_pod_labels{exported_namespace=\"rollouts-demo\", label_app_kubernetes_io_name=\"rollouts-demo\", label_app_kubernetes_io_version!=\"\"})", "legendFormat": "{{label_app_kubernetes_io_version}}", "refId": "A" }],
-                      "options": { "legend": { "displayMode": "table", "calcs": ["lastNotNull"] } },
-                      "fieldConfig": {
-                        "defaults": {
-                          "min": 0,
-                          "custom": { "drawStyle": "staircase", "lineWidth": 2, "fillOpacity": 20, "pointSize": 5, "spanNulls": false, "axisBorderShow": true }
-                        }
-                      }
-                    },
-                    {
-                      "id": 4,
-                      "type": "timeseries",
-                      "title": "In-Flight Requests",
-                      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 1 },
-                      "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
-                      "targets": [{ "expr": "sum by (\"service.version\") ({__name__=\"http.server.active_requests\", \"service.name\"=\"rollouts-demo\"})", "legendFormat": "{{service.version}}", "refId": "A" }],
-                      "fieldConfig": {
-                        "defaults": {
-                          "min": 0,
-                          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 20, "pointSize": 5, "spanNulls": false, "axisBorderShow": true }
-                        }
-                      }
-                    },
-                    {
-                      "id": 10,
-                      "type": "row",
-                      "title": "Version: $version",
-                      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 11 },
-                      "collapsed": false,
-                      "repeat": "version",
-                      "repeatDirection": "h"
-                    },
                     {
                       "id": 5,
                       "type": "timeseries",
                       "title": "Request Rate by Status",
-                      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 12 },
+                      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 0 },
                       "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
                       "targets": [
-                        { "expr": "sum by (\"http.response.status_code\") (rate({__name__=\"http.server.request.duration_count\", \"service.name\"=\"rollouts-demo\", \"service.version\"=\"$version\"}[$__rate_interval]))", "legendFormat": "{{http.response.status_code}}", "refId": "A" }
+                        { "expr": "sum by (\"http.response.status_code\") (rate({__name__=\"http.server.request.duration_count\", \"service.name\"=\"rollouts-demo\"}[$__rate_interval]))", "legendFormat": "{{http.response.status_code}}", "refId": "A" }
                       ],
                       "fieldConfig": {
                         "defaults": {
@@ -156,33 +97,57 @@ spec:
                     {
                       "id": 6,
                       "type": "timeseries",
-                      "title": "Latency Percentiles",
-                      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 12 },
+                      "title": "Latency Percentiles (by version)",
+                      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 0 },
                       "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
                       "targets": [
-                        { "expr": "histogram_quantile(0.50, sum by (le) (rate({__name__=\"http.server.request.duration_bucket\", \"service.name\"=\"rollouts-demo\", \"service.version\"=\"$version\"}[$__rate_interval])))", "legendFormat": "p50", "refId": "A" },
-                        { "expr": "histogram_quantile(0.95, sum by (le) (rate({__name__=\"http.server.request.duration_bucket\", \"service.name\"=\"rollouts-demo\", \"service.version\"=\"$version\"}[$__rate_interval])))", "legendFormat": "p95", "refId": "B" },
-                        { "expr": "histogram_quantile(0.99, sum by (le) (rate({__name__=\"http.server.request.duration_bucket\", \"service.name\"=\"rollouts-demo\", \"service.version\"=\"$version\"}[$__rate_interval])))", "legendFormat": "p99", "refId": "C" }
+                        { "expr": "histogram_quantile(0.50, sum by (le, \"service.version\") (rate({__name__=\"http.server.request.duration_bucket\", \"service.name\"=\"rollouts-demo\"}[$__rate_interval])))", "legendFormat": "p50 ({{service.version}})", "refId": "A" },
+                        { "expr": "histogram_quantile(0.95, sum by (le, \"service.version\") (rate({__name__=\"http.server.request.duration_bucket\", \"service.name\"=\"rollouts-demo\"}[$__rate_interval])))", "legendFormat": "p95 ({{service.version}})", "refId": "B" },
+                        { "expr": "histogram_quantile(0.99, sum by (le, \"service.version\") (rate({__name__=\"http.server.request.duration_bucket\", \"service.name\"=\"rollouts-demo\"}[$__rate_interval])))", "legendFormat": "p99 ({{service.version}})", "refId": "C" }
                       ],
                       "fieldConfig": {
                         "defaults": {
                           "unit": "ms",
                           "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "pointSize": 5, "spanNulls": false, "axisBorderShow": true }
-                        },
-                        "overrides": [
-                          { "matcher": { "id": "byName", "options": "p50" }, "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }] },
-                          { "matcher": { "id": "byName", "options": "p95" }, "properties": [{ "id": "color", "value": { "fixedColor": "yellow", "mode": "fixed" } }] },
-                          { "matcher": { "id": "byName", "options": "p99" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] }
-                        ]
+                        }
+                      }
+                    },
+                    {
+                      "id": 7,
+                      "type": "timeseries",
+                      "title": "Replicas",
+                      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 10 },
+                      "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+                      "targets": [{ "expr": "count by (label_app_kubernetes_io_version) (kube_pod_labels{exported_namespace=\"rollouts-demo\", label_app_kubernetes_io_name=\"rollouts-demo\", label_app_kubernetes_io_version!=\"\"})", "legendFormat": "{{label_app_kubernetes_io_version}}", "refId": "A" }],
+                      "options": { "legend": { "displayMode": "table", "calcs": ["lastNotNull"] } },
+                      "fieldConfig": {
+                        "defaults": {
+                          "min": 0,
+                          "custom": { "drawStyle": "staircase", "lineWidth": 2, "fillOpacity": 20, "pointSize": 5, "spanNulls": false, "axisBorderShow": true }
+                        }
+                      }
+                    },
+                    {
+                      "id": 4,
+                      "type": "timeseries",
+                      "title": "In-Flight Requests",
+                      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 10 },
+                      "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+                      "targets": [{ "expr": "sum by (\"service.version\") ({__name__=\"http.server.active_requests\", \"service.name\"=\"rollouts-demo\"})", "legendFormat": "{{service.version}}", "refId": "A" }],
+                      "fieldConfig": {
+                        "defaults": {
+                          "min": 0,
+                          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 20, "pointSize": 5, "spanNulls": false, "axisBorderShow": true }
+                        }
                       }
                     },
                     {
                       "id": 2,
                       "type": "timeseries",
-                      "title": "Error Rate (5xx)",
-                      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 22 },
+                      "title": "Error Rate 5xx (by version)",
+                      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 20 },
                       "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
-                      "targets": [{ "expr": "sum(rate({__name__=\"http.server.request.duration_count\", \"service.name\"=\"rollouts-demo\", \"service.version\"=\"$version\", \"http.response.status_code\"=~\"5..\"}[$__rate_interval]))\n/\nsum(rate({__name__=\"http.server.request.duration_count\", \"service.name\"=\"rollouts-demo\", \"service.version\"=\"$version\"}[$__rate_interval]))", "legendFormat": "5xx %", "refId": "A" }],
+                      "targets": [{ "expr": "sum by (\"service.version\") (rate({__name__=\"http.server.request.duration_count\", \"service.name\"=\"rollouts-demo\", \"http.response.status_code\"=~\"5..\"}[$__rate_interval]))\n/\nsum by (\"service.version\") (rate({__name__=\"http.server.request.duration_count\", \"service.name\"=\"rollouts-demo\"}[$__rate_interval]))", "legendFormat": "{{service.version}}", "refId": "A" }],
                       "fieldConfig": {
                         "defaults": {
                           "unit": "percentunit",
@@ -195,10 +160,10 @@ spec:
                     {
                       "id": 8,
                       "type": "timeseries",
-                      "title": "Error Rate (4xx)",
-                      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 22 },
+                      "title": "Error Rate 4xx (by version)",
+                      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 20 },
                       "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
-                      "targets": [{ "expr": "sum(rate({__name__=\"http.server.request.duration_count\", \"service.name\"=\"rollouts-demo\", \"service.version\"=\"$version\", \"http.response.status_code\"=~\"4..\"}[$__rate_interval]))\n/\nsum(rate({__name__=\"http.server.request.duration_count\", \"service.name\"=\"rollouts-demo\", \"service.version\"=\"$version\"}[$__rate_interval]))", "legendFormat": "4xx %", "refId": "A" }],
+                      "targets": [{ "expr": "sum by (\"service.version\") (rate({__name__=\"http.server.request.duration_count\", \"service.name\"=\"rollouts-demo\", \"http.response.status_code\"=~\"4..\"}[$__rate_interval]))\n/\nsum by (\"service.version\") (rate({__name__=\"http.server.request.duration_count\", \"service.name\"=\"rollouts-demo\"}[$__rate_interval]))", "legendFormat": "{{service.version}}", "refId": "A" }],
                       "fieldConfig": {
                         "defaults": {
                           "unit": "percentunit",
@@ -212,9 +177,9 @@ spec:
                       "id": 11,
                       "type": "timeseries",
                       "title": "RPS per Pod",
-                      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 32 },
+                      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 30 },
                       "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
-                      "targets": [{ "expr": "sum by (\"k8s.pod.name\") (rate({__name__=\"http.server.request.duration_count\", \"service.name\"=\"rollouts-demo\", \"service.version\"=\"$version\"}[$__rate_interval]))", "legendFormat": "{{k8s.pod.name}}", "refId": "A" }],
+                      "targets": [{ "expr": "sum by (\"k8s.pod.name\") (rate({__name__=\"http.server.request.duration_count\", \"service.name\"=\"rollouts-demo\"}[$__rate_interval]))", "legendFormat": "{{k8s.pod.name}}", "refId": "A" }],
                       "fieldConfig": {
                         "defaults": {
                           "unit": "reqps",
@@ -227,9 +192,9 @@ spec:
                       "id": 12,
                       "type": "timeseries",
                       "title": "p99 Latency per Pod",
-                      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 32 },
+                      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 30 },
                       "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
-                      "targets": [{ "expr": "histogram_quantile(0.99, sum by (le, \"k8s.pod.name\") (rate({__name__=\"http.server.request.duration_bucket\", \"service.name\"=\"rollouts-demo\", \"service.version\"=\"$version\"}[$__rate_interval])))", "legendFormat": "{{k8s.pod.name}}", "refId": "A" }],
+                      "targets": [{ "expr": "histogram_quantile(0.99, sum by (le, \"k8s.pod.name\") (rate({__name__=\"http.server.request.duration_bucket\", \"service.name\"=\"rollouts-demo\"}[$__rate_interval])))", "legendFormat": "{{k8s.pod.name}}", "refId": "A" }],
                       "fieldConfig": {
                         "defaults": {
                           "unit": "ms",
