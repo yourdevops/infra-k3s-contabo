@@ -58,12 +58,11 @@ keda:
   cooldownPeriod: 120                   # seconds before scaling down after last trigger
   triggers:
     # RPS from OTel metrics pushed to VictoriaMetrics (requires instrumented image + OTEL_EXPORTER_OTLP_ENDPOINT env var)
-    # VictoriaMetrics converts OTel http.server.request.duration → http_server_request_duration_seconds
-    # service.name resource attribute becomes the `job` label
+    # VM keeps OTel dot notation — quote metric/label names in PromQL
     - type: prometheus
       metadata:
         serverAddress: http://victoria-metrics-server.victoria-metrics.svc.cluster.local:8428
-        query: sum(rate(http_server_request_duration_seconds_count{job="RELEASE_NAME"}[1m]))
+        query: sum(rate({__name__="http.server.request.duration_count", "service.name"="RELEASE_NAME"}[1m]))
         threshold: "50"                 # target RPS per replica
         activationThreshold: "5"        # don't activate below 5 RPS total
     # CPU as a safety net alongside RPS

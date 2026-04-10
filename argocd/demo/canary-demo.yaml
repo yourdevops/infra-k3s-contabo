@@ -59,12 +59,11 @@ spec:
             startingStep: 2                # step index where background analysis begins
             prometheus:
               address: http://victoria-metrics-server.victoria-metrics.svc.cluster.local:8428
-              # OTel http.server.request.duration → http_server_request_duration_seconds in VM
-              # OTEL_SERVICE_NAME (= Release.Name) becomes the `job` label
+              # VM keeps OTel dot notation — quote metric/label names in PromQL
               query: |
-                sum(rate(http_server_request_duration_seconds_count{job="canary-demo", http_response_status_code=~"2.."}[1m]))
+                sum(rate({__name__="http.server.request.duration_count", "service.name"="canary-demo", "http.response.status_code"=~"2.."}[1m]))
                 /
-                sum(rate(http_server_request_duration_seconds_count{job="canary-demo"}[1m]))
+                sum(rate({__name__="http.server.request.duration_count", "service.name"="canary-demo"}[1m]))
               successThreshold: 0.95
           canaryProbe:                     # inline — direct HTTP probe of canary pod
             create: true
@@ -88,8 +87,8 @@ spec:
             - type: prometheus
               metadata:
                 serverAddress: http://victoria-metrics-server.victoria-metrics.svc.cluster.local:8428
-                query: sum(rate(http_server_request_duration_seconds_count{job="canary-demo"}[1m]))
-                threshold: "50"
+                query: sum(rate({__name__="http.server.request.duration_count", "service.name"="canary-demo"}[1m]))
+                threshold: "340"
                 activationThreshold: "5"
             - type: cpu
               metricType: Utilization
