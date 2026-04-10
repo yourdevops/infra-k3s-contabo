@@ -23,7 +23,22 @@
         rbac:
           policy.csv: |
             p, role:admin, exec, create, */*, allow
+      controller:
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: "1"
+            memory: 1Gi
       server:
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
         extensions:
           enabled: true
           extensionList:
@@ -31,3 +46,43 @@
               env:
                 - name: EXTENSION_URL
                   value: https://github.com/argoproj-labs/rollout-extension/releases/download/v0.3.7/extension.tar
+      repoServer:
+        resources:
+          requests:
+            cpu: 25m
+            memory: 64Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+      applicationSet:
+        resources:
+          requests:
+            cpu: 25m
+            memory: 64Mi
+          limits:
+            cpu: 250m
+            memory: 128Mi
+      notifications:
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+      redis:
+        resources:
+          requests:
+            cpu: 25m
+            memory: 16Mi
+          limits:
+            cpu: 100m
+            memory: 64Mi
+      dex:
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 64Mi

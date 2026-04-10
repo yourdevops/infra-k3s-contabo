@@ -17,6 +17,13 @@ spec:
     helm:
       valuesObject:
         controller:
+          resources:
+            requests:
+              cpu: 25m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
           trafficRouterPlugins:
             - name: "argoproj-labs/gatewayAPI"
               location: "https://github.com/argoproj-labs/rollouts-plugin-trafficrouter-gatewayapi/releases/download/v0.13.0/gatewayapi-plugin-linux-amd64"
