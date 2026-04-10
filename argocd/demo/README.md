@@ -30,9 +30,29 @@ kubectl argo rollouts abort canary-demo -n canary-demo          # abort
 kubectl argo rollouts retry rollout canary-demo -n canary-demo  # retry
 ```
 
+## Load testing (single-pod saturation)
+
+Uses `argoproj/load-tester` image with [wrk](https://github.com/wg/wrk) built in.
+
+```bash
+# 1. Scale to a single replica
+kubectl argo rollouts set replicas canary-demo 1 -n canary-demo
+
+# 2. Run wrk — increase -c (10 → 25 → 50 → 100) to find saturation
+kubectl run load-test --rm -it --restart=Never \
+  --image=argoproj/load-tester:latest -n canary-demo -- \
+  sh -c 'wrk -t4 -c50 -d30s -s /report.lua http://canary-demo-internal/color && cat /report.json'
+
+# 3. Restore replica count
+kubectl argo rollouts set replicas canary-demo 5 -n canary-demo
+```
+
+`report.json` fields: `requests_per_second`, `errors_ratio`, `latency_avg_ms`, `latency_max_ms`.
+Set KEDA threshold to ~70% of the RPS where latency starts degrading.
+
 ## URLs
 
 - https://canary-demo.yourdevops.me
-- https://header-demo.yourdevops.me
+- https://grafana.yourdevops.me
 - https://bg-demo.yourdevops.me
 - https://bg-demo-preview.yourdevops.me

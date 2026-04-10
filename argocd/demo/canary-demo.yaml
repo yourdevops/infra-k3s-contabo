@@ -79,7 +79,7 @@ spec:
         # OTel metrics → VictoriaMetrics → KEDA (Prometheus trigger)
         # http.server.request.duration _count gives RPS; CPU/memory as safety nets
         keda:
-          enabled: false                   # enable after load-testing single-pod saturation
+          enabled: true                   # enable after load-testing single-pod saturation
           minReplicas: 3
           maxReplicas: 15
           pollingInterval: 15
@@ -89,7 +89,7 @@ spec:
               metadata:
                 serverAddress: http://victoria-metrics-server.victoria-metrics.svc.cluster.local:8428
                 query: sum(rate({__name__="http.server.request.duration_count", "service.name"="canary-demo"}[1m]))
-                threshold: "340"
+                threshold: "310"
                 activationThreshold: "5"
             - type: cpu
               metricType: Utilization
