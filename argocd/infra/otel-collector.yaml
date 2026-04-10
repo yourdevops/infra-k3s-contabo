@@ -35,6 +35,12 @@ spec:
           kubernetesAttributes:
             enabled: true
 
+        # Service is disabled by default for DaemonSet mode; enable it
+        # so in-cluster apps can reach otel-collector.otel-collector.svc.cluster.local
+        service:
+          enabled: true
+          # internalTrafficPolicy: Local is set automatically for DaemonSet
+
         # Disable unused ports (Jaeger, Zipkin enabled by default)
         ports:
           jaeger-compact:

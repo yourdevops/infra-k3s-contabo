@@ -146,6 +146,7 @@ spec:
     - group: argoproj.io
       kind: Rollout
       jqPathExpressions:
+        - .spec.replicas
         - .spec.strategy.canary.analysis.analysisRunMetadata
         - .spec.strategy.canary.steps[].analysis.analysisRunMetadata
   destination:
