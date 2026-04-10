@@ -41,7 +41,7 @@ kubectl argo rollouts set replicas rollouts-demo 1 -n rollouts-demo
 # 2. Run wrk — increase -c (10 → 25 → 50 → 100) to find saturation
 kubectl run load-test --rm -it --restart=Never \
   --image=argoproj/load-tester:latest -n rollouts-demo -- \
-  sh -c 'wrk -t4 -c150 -d300s -s /report.lua http://rollouts-demo-internal/color && cat /report.json'
+  sh -c 'wrk -t4 -c200 -d600s -s /report.lua http://rollouts-demo-internal/color && cat /report.json'
 
 # 3. Restore replica count
 kubectl argo rollouts set replicas rollouts-demo 5 -n rollouts-demo
