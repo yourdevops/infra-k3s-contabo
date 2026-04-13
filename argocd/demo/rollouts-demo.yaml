@@ -109,7 +109,7 @@ spec:
         # ── Canary strategy ─────────────────────────────────────
         # https://argo-rollouts.readthedocs.io/en/stable/features/specification/
         canary:
-          dynamicStableScale: false         # scale down stable pods as canary weight increases
+          dynamicStableScale: true           # scale down stable pods as canary weight increases
           # Header-based routing (Firefox -> canary).
           # Firefox gets 100% canary throughout the entire rollout.
           # managedRoutes:
