@@ -42,3 +42,4 @@ terraform.rc
 .vault-pass
 
 *.md
+*.png

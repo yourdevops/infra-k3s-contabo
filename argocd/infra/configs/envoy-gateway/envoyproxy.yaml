@@ -7,6 +7,12 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
+  telemetry:
+    metrics:
+      # Emit per-pod metrics (`envoy_cluster_endpoint_upstream_rq_*`) so that
+      # short-lived canary pods stay observable at the gateway level, even if
+      # they die before the app's OTel SDK gets a chance to export.
+      enablePerEndpointStats: true
   provider:
     type: Kubernetes
     kubernetes:

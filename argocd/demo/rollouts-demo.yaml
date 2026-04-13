@@ -47,6 +47,15 @@ spec:
           name: envoy-gateway
           namespace: envoy-gateway-system
           sectionName: https
+          # East-west: attach HTTPRoute to the internal Envoy Gateway too
+          # so in-cluster callers get the same weighted splits + per-pod
+          # metrics as external traffic.  See ADR-014.
+          internal:
+            enabled: true
+            name: envoy-gateway-internal
+            namespace: envoy-gateway-system
+            sectionName: http
+            serviceFqdn: envoy-gateway-internal.envoy-gateway-system.svc.cluster.local
 
         # ── Pre-rollout migration job ───────────────────────────
         migrationJob:

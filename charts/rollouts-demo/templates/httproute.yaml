@@ -13,8 +13,21 @@ spec:
       name: {{ .Values.gateway.name }}
       namespace: {{ .Values.gateway.namespace }}
       sectionName: {{ .Values.gateway.sectionName }}
+    {{- if .Values.gateway.internal.enabled }}
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: {{ .Values.gateway.internal.name }}
+      namespace: {{ .Values.gateway.internal.namespace }}
+      sectionName: {{ .Values.gateway.internal.sectionName }}
+    {{- end }}
   hostnames:
     - {{ .Values.hostname }}
+    {{- if .Values.gateway.internal.enabled }}
+    # East-west hostname: callers in-cluster reach this HTTPRoute via the
+    # ExternalName shim Service, which resolves to the internal Envoy
+    # Gateway. The Host header they send matches this entry.
+    - {{ include "rollouts-demo.name" . }}.{{ .Release.Namespace }}.svc.cluster.local
+    {{- end }}
   rules:
     - matches:
         - path:
