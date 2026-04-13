@@ -152,13 +152,13 @@ spec:
                     {
                       "id": 104,
                       "type": "timeseries",
-                      "title": "Mean latency by version",
-                      "description": "Envoy via Little's Law (5m smoothed, solid): active/rate gives per-version mean latency end-to-end as Envoy sees it — network + proxy queue + handler. OTel in-handler mean (dashed) covers only handler time. Envoy typically reads several times higher because it includes network and dispatch — closer to client experience. For p95/p99 per version see the Routing-layer row (OTel-only; Envoy histograms are cluster-scoped).",
+                      "title": "p99 / p50 latency by version",
+                      "description": "OTel histogram percentiles per service.version, in-handler. p99 (solid) is the primary tail-latency signal for promote/rollback; p50 (dashed) is the typical-user context — a widening p99−p50 gap indicates tail skew without a baseline shift. OTel is used because Envoy histograms are cluster-scoped (stable + canary pool into one bucket — can't split by version) and Envoy-via-Little's-Law proved too noisy at low concurrency.",
                       "gridPos": { "h": 10, "w": 12, "x": 12, "y": 11 },
                       "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
                       "targets": [
-                        { "expr": "1000 * avg_over_time(\n  (\n    sum by (label_app_kubernetes_io_version) (\n      envoy_cluster_endpoint_rq_active{envoy_cluster_name=\"httproute/rollouts-demo/rollouts-demo/rule/0\"}\n      * on (envoy_endpoint_address) group_left(uid)\n        label_replace(kube_pod_info{exported_namespace=\"rollouts-demo\"}, \"envoy_endpoint_address\", \"$1:8080\", \"pod_ip\", \"(.+)\")\n      * on (uid) group_left(label_app_kubernetes_io_version)\n        kube_pod_labels{exported_namespace=\"rollouts-demo\", label_app_kubernetes_io_name=\"rollouts-demo\"}\n    )\n    /\n    sum by (label_app_kubernetes_io_version) (\n      rate(envoy_cluster_endpoint_rq_total{envoy_cluster_name=\"httproute/rollouts-demo/rollouts-demo/rule/0\"}[1m])\n      * on (envoy_endpoint_address) group_left(uid)\n        label_replace(kube_pod_info{exported_namespace=\"rollouts-demo\"}, \"envoy_endpoint_address\", \"$1:8080\", \"pod_ip\", \"(.+)\")\n      * on (uid) group_left(label_app_kubernetes_io_version)\n        kube_pod_labels{exported_namespace=\"rollouts-demo\", label_app_kubernetes_io_name=\"rollouts-demo\"}\n    )\n  )[5m:15s]\n)", "legendFormat": "Envoy {{label_app_kubernetes_io_version}}", "refId": "A" },
-                        { "expr": "sum by (\"service.version\") (rate({__name__=\"http.server.request.duration_sum\", \"service.name\"=\"rollouts-demo\"}[$__rate_interval]))\n/\nsum by (\"service.version\") (rate({__name__=\"http.server.request.duration_count\", \"service.name\"=\"rollouts-demo\"}[$__rate_interval]))", "legendFormat": "OTel {{service.version}}", "refId": "B" }
+                        { "expr": "histogram_quantile(0.99, sum by (le, \"service.version\") (rate({__name__=\"http.server.request.duration_bucket\", \"service.name\"=\"rollouts-demo\"}[$__rate_interval])))", "legendFormat": "p99 {{service.version}}", "refId": "A" },
+                        { "expr": "histogram_quantile(0.50, sum by (le, \"service.version\") (rate({__name__=\"http.server.request.duration_bucket\", \"service.name\"=\"rollouts-demo\"}[$__rate_interval])))", "legendFormat": "p50 {{service.version}}", "refId": "B" }
                       ],
                       "fieldConfig": {
                         "defaults": {
@@ -167,7 +167,7 @@ spec:
                           "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "pointSize": 5, "spanNulls": false, "axisBorderShow": true }
                         },
                         "overrides": [
-                          { "matcher": { "id": "byRegexp", "options": "^OTel .*" }, "properties": [{ "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [10, 10] } }] }
+                          { "matcher": { "id": "byRegexp", "options": "^p50 .*" }, "properties": [{ "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [10, 10] } }] }
                         ]
                       }
                     },
@@ -304,24 +304,19 @@ spec:
                         {
                           "id": 304,
                           "type": "timeseries",
-                          "title": "Latency percentiles (p95/p99 per version via OTel; Envoy p99 per gateway)",
-                          "description": "p95/p99 per version currently requires OTel — Envoy emits only cluster-level histograms (single-rule HTTPRoute pools all backend pods into one cluster, so versions can't be split). Envoy p99 shown per gateway as a routing-layer sanity check. Closing this gap with Envoy alone requires piping Envoy access logs through a log-to-metric processor (future work).",
+                          "title": "Envoy p99 latency (per gateway)",
+                          "description": "Cluster-aggregate p99 from Envoy's per-gateway histograms. No per-version split — a single-rule HTTPRoute pools stable and canary pods into one Envoy cluster. The gap between external and internal reveals north-south vs east-west path latency (proxy hop + network + dispatch). Per-version p99 lives in Row 1 (OTel).",
                           "gridPos": { "h": 10, "w": 12, "x": 12, "y": 43 },
                           "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
                           "targets": [
-                            { "expr": "histogram_quantile(0.95, sum by (le, \"service.version\") (rate({__name__=\"http.server.request.duration_bucket\", \"service.name\"=\"rollouts-demo\"}[$__rate_interval])))", "legendFormat": "OTel p95 {{service.version}}", "refId": "A" },
-                            { "expr": "histogram_quantile(0.99, sum by (le, \"service.version\") (rate({__name__=\"http.server.request.duration_bucket\", \"service.name\"=\"rollouts-demo\"}[$__rate_interval])))", "legendFormat": "OTel p99 {{service.version}}", "refId": "B" },
-                            { "expr": "label_replace(label_replace(histogram_quantile(0.99, sum by (le, gateway_envoyproxy_io_owning_gateway_name) (rate(envoy_cluster_upstream_rq_time_bucket{envoy_cluster_name=\"httproute/rollouts-demo/rollouts-demo/rule/0\"}[$__rate_interval]))), \"gw\", \"internal\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway-internal$\"), \"gw\", \"external\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway$\")", "legendFormat": "Envoy p99 ({{gw}})", "refId": "C" }
+                            { "expr": "label_replace(label_replace(histogram_quantile(0.99, sum by (le, gateway_envoyproxy_io_owning_gateway_name) (rate(envoy_cluster_upstream_rq_time_bucket{envoy_cluster_name=\"httproute/rollouts-demo/rollouts-demo/rule/0\"}[$__rate_interval]))), \"gw\", \"internal\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway-internal$\"), \"gw\", \"external\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway$\")", "legendFormat": "p99 ({{gw}})", "refId": "A" }
                           ],
                           "fieldConfig": {
                             "defaults": {
                               "unit": "ms",
                               "min": 0,
                               "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "pointSize": 5, "spanNulls": false, "axisBorderShow": true }
-                            },
-                            "overrides": [
-                              { "matcher": { "id": "byRegexp", "options": "^Envoy p99 .*" }, "properties": [{ "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [10, 10] } }] }
-                            ]
+                            }
                           }
                         }
                       ]
