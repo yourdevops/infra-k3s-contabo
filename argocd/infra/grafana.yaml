@@ -80,10 +80,43 @@ spec:
                   "time": { "from": "now-15m", "to": "now" },
                   "panels": [
                     {
+                      "id": 100,
+                      "type": "row",
+                      "title": "kube-state-metrics — pod topology (ground truth)",
+                      "collapsed": false,
+                      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+                      "panels": []
+                    },
+                    {
+                      "id": 7,
+                      "type": "timeseries",
+                      "title": "Replicas",
+                      "description": "Pod count per version label, scraped from kube_pod_labels. The authoritative inventory of what's running right now — OTel and Envoy views below should line up with this.",
+                      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 1 },
+                      "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+                      "targets": [{ "expr": "count by (label_app_kubernetes_io_version) (kube_pod_labels{exported_namespace=\"rollouts-demo\", label_app_kubernetes_io_name=\"rollouts-demo\", label_app_kubernetes_io_version!=\"\"})", "legendFormat": "{{label_app_kubernetes_io_version}}", "refId": "A" }],
+                      "options": { "legend": { "displayMode": "table", "calcs": ["lastNotNull"] } },
+                      "fieldConfig": {
+                        "defaults": {
+                          "min": 0,
+                          "custom": { "drawStyle": "staircase", "lineWidth": 2, "fillOpacity": 20, "pointSize": 5, "spanNulls": false, "axisBorderShow": true }
+                        }
+                      }
+                    },
+                    {
+                      "id": 101,
+                      "type": "row",
+                      "title": "OTel — in-process application instrumentation (rollouts-demo → OTLP → VictoriaMetrics)",
+                      "collapsed": false,
+                      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 11 },
+                      "panels": []
+                    },
+                    {
                       "id": 5,
                       "type": "timeseries",
                       "title": "Request Rate by Status",
-                      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 0 },
+                      "description": "App-reported request rate per status code, split by service.version. Counts what the app actually served.",
+                      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 12 },
                       "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
                       "targets": [
                         { "expr": "sum by (\"http.response.status_code\", \"service.version\") (rate({__name__=\"http.server.request.duration_count\", \"service.name\"=\"rollouts-demo\"}[$__rate_interval]))", "legendFormat": "{{http.response.status_code}} ({{service.version}})", "refId": "A" }
@@ -104,7 +137,8 @@ spec:
                       "id": 6,
                       "type": "timeseries",
                       "title": "Latency Percentiles",
-                      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 0 },
+                      "description": "App-reported histogram quantiles per service.version, in milliseconds end-to-end inside the handler.",
+                      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 12 },
                       "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
                       "targets": [
                         { "expr": "histogram_quantile(0.50, sum by (le, \"service.version\") (rate({__name__=\"http.server.request.duration_bucket\", \"service.name\"=\"rollouts-demo\"}[$__rate_interval])))", "legendFormat": "p50 ({{service.version}})", "refId": "A" },
@@ -119,25 +153,11 @@ spec:
                       }
                     },
                     {
-                      "id": 7,
-                      "type": "timeseries",
-                      "title": "Replicas",
-                      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 10 },
-                      "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
-                      "targets": [{ "expr": "count by (label_app_kubernetes_io_version) (kube_pod_labels{exported_namespace=\"rollouts-demo\", label_app_kubernetes_io_name=\"rollouts-demo\", label_app_kubernetes_io_version!=\"\"})", "legendFormat": "{{label_app_kubernetes_io_version}}", "refId": "A" }],
-                      "options": { "legend": { "displayMode": "table", "calcs": ["lastNotNull"] } },
-                      "fieldConfig": {
-                        "defaults": {
-                          "min": 0,
-                          "custom": { "drawStyle": "staircase", "lineWidth": 2, "fillOpacity": 20, "pointSize": 5, "spanNulls": false, "axisBorderShow": true }
-                        }
-                      }
-                    },
-                    {
                       "id": 4,
                       "type": "timeseries",
                       "title": "In-Flight Requests",
-                      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 10 },
+                      "description": "Concurrent requests being served per version, from the app's up/down counter.",
+                      "gridPos": { "h": 10, "w": 8, "x": 0, "y": 22 },
                       "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
                       "targets": [{ "expr": "sum by (\"service.version\") ({__name__=\"http.server.active_requests\", \"service.name\"=\"rollouts-demo\"})", "legendFormat": "{{service.version}}", "refId": "A" }],
                       "fieldConfig": {
@@ -151,7 +171,7 @@ spec:
                       "id": 2,
                       "type": "timeseries",
                       "title": "Error Rate 5xx",
-                      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 20 },
+                      "gridPos": { "h": 10, "w": 8, "x": 8, "y": 22 },
                       "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
                       "targets": [{ "expr": "sum by (\"service.version\") (rate({__name__=\"http.server.request.duration_count\", \"service.name\"=\"rollouts-demo\", \"http.response.status_code\"=~\"5..\"}[$__rate_interval]))\n/\nsum by (\"service.version\") (rate({__name__=\"http.server.request.duration_count\", \"service.name\"=\"rollouts-demo\"}[$__rate_interval]))", "legendFormat": "{{service.version}}", "refId": "A" }],
                       "fieldConfig": {
@@ -167,7 +187,7 @@ spec:
                       "id": 8,
                       "type": "timeseries",
                       "title": "Error Rate 4xx",
-                      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 20 },
+                      "gridPos": { "h": 10, "w": 8, "x": 16, "y": 22 },
                       "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
                       "targets": [{ "expr": "sum by (\"service.version\") (rate({__name__=\"http.server.request.duration_count\", \"service.name\"=\"rollouts-demo\", \"http.response.status_code\"=~\"4..\"}[$__rate_interval]))\n/\nsum by (\"service.version\") (rate({__name__=\"http.server.request.duration_count\", \"service.name\"=\"rollouts-demo\"}[$__rate_interval]))", "legendFormat": "{{service.version}}", "refId": "A" }],
                       "fieldConfig": {
@@ -183,7 +203,8 @@ spec:
                       "id": 11,
                       "type": "timeseries",
                       "title": "RPS per Pod",
-                      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 30 },
+                      "description": "App-reported request rate, keyed by k8s.pod.name resource attribute added by the OTel Collector's k8sattributesprocessor.",
+                      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 32 },
                       "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
                       "targets": [{ "expr": "sum by (\"k8s.pod.name\") (rate({__name__=\"http.server.request.duration_count\", \"service.name\"=\"rollouts-demo\"}[$__rate_interval]))", "legendFormat": "{{k8s.pod.name}}", "refId": "A" }],
                       "fieldConfig": {
@@ -198,7 +219,8 @@ spec:
                       "id": 12,
                       "type": "timeseries",
                       "title": "p99 Latency per Pod",
-                      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 30 },
+                      "description": "App-reported p99 per pod. Envoy only emits per-cluster histograms, so this per-pod breakdown is the one OTel view without a direct Envoy equivalent.",
+                      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 32 },
                       "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
                       "targets": [{ "expr": "histogram_quantile(0.99, sum by (le, \"k8s.pod.name\") (rate({__name__=\"http.server.request.duration_bucket\", \"service.name\"=\"rollouts-demo\"}[$__rate_interval])))", "legendFormat": "{{k8s.pod.name}}", "refId": "A" }],
                       "fieldConfig": {
@@ -212,17 +234,17 @@ spec:
                     {
                       "id": 19,
                       "type": "row",
-                      "title": "Envoy Gateway (east-west routing layer)",
+                      "title": "Envoy — gateway-observed metrics (same story one layer lower; north-south + east-west)",
                       "collapsed": false,
-                      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 40 },
+                      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 42 },
                       "panels": []
                     },
                     {
                       "id": 20,
                       "type": "timeseries",
                       "title": "Envoy: RPS per backend pod",
-                      "description": "Per-endpoint request rate observed at both gateways. During a canary rollout, canary pods appear as new series; the rate split per pod reflects the HTTPRoute backendRefs weights applied by both gateways in lockstep. gw=external is Cloudflare-originated traffic; gw=internal is east-west cluster traffic via the ExternalName shim.",
-                      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 41 },
+                      "description": "Per-endpoint request rate observed at both gateways. During a canary rollout, canary pods appear as new series; the rate split per pod reflects the HTTPRoute backendRefs weights applied by both gateways in lockstep. gw=external is Cloudflare-originated traffic; gw=internal is east-west cluster traffic via the ExternalName shim. Pair with OTel 'RPS per Pod' above — gw=internal + gw=external should sum to the OTel per-pod rate when east-west flows through envoy-gateway-internal. A plain ClusterIP east-west path bypasses HTTPRoute weights and shows up here as a shortfall versus the OTel total.",
+                      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 43 },
                       "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
                       "targets": [{ "expr": "label_replace(label_replace(sum by (envoy_endpoint_address, gateway_envoyproxy_io_owning_gateway_name) (rate(envoy_cluster_endpoint_rq_total{envoy_cluster_name=\"httproute/rollouts-demo/rollouts-demo/rule/0\"}[$__rate_interval])), \"gw\", \"internal\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway-internal$\"), \"gw\", \"external\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway$\")", "legendFormat": "{{envoy_endpoint_address}} ({{gw}})", "refId": "A" }],
                       "fieldConfig": {
@@ -237,8 +259,8 @@ spec:
                       "id": 21,
                       "type": "timeseries",
                       "title": "Envoy: Status by code class",
-                      "description": "Response-code class distribution at each gateway. Complements OTel app-level metrics with a routing-layer view.",
-                      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 41 },
+                      "description": "Response-code class distribution per gateway. Mirrors OTel 'Request Rate by Status' at the routing layer — once east-west flows through envoy-gateway-internal, this captures both external and internal callers without any in-app instrumentation.",
+                      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 43 },
                       "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
                       "targets": [{ "expr": "label_replace(label_replace(sum by (envoy_response_code_class, gateway_envoyproxy_io_owning_gateway_name) (rate(envoy_cluster_upstream_rq_xx{envoy_cluster_name=\"httproute/rollouts-demo/rollouts-demo/rule/0\"}[$__rate_interval])), \"gw\", \"internal\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway-internal$\"), \"gw\", \"external\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway$\")", "legendFormat": "{{envoy_response_code_class}}xx ({{gw}})", "refId": "A" }],
                       "fieldConfig": {
@@ -257,8 +279,8 @@ spec:
                       "id": 22,
                       "type": "timeseries",
                       "title": "Envoy: Error rate per backend pod",
-                      "description": "Per-endpoint error ratio observed at each gateway. envoy_cluster_endpoint_rq_error counts upstream failures (connect failures, 5xx, reset).",
-                      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 51 },
+                      "description": "Per-endpoint error ratio observed at each gateway. envoy_cluster_endpoint_rq_error counts upstream failures (connect failures, 5xx, reset). Parallels OTel 'Error Rate 5xx' above, attributed to the specific pod and gateway that saw the failure.",
+                      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 53 },
                       "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
                       "targets": [{ "expr": "label_replace(label_replace(\n  (sum by (envoy_endpoint_address, gateway_envoyproxy_io_owning_gateway_name) (rate(envoy_cluster_endpoint_rq_error{envoy_cluster_name=\"httproute/rollouts-demo/rollouts-demo/rule/0\"}[$__rate_interval]))\n   /\n   sum by (envoy_endpoint_address, gateway_envoyproxy_io_owning_gateway_name) (rate(envoy_cluster_endpoint_rq_total{envoy_cluster_name=\"httproute/rollouts-demo/rollouts-demo/rule/0\"}[$__rate_interval]))),\n  \"gw\", \"internal\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway-internal$\"),\n  \"gw\", \"external\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway$\")", "legendFormat": "{{envoy_endpoint_address}} ({{gw}})", "refId": "A" }],
                       "fieldConfig": {
@@ -274,8 +296,8 @@ spec:
                       "id": 23,
                       "type": "timeseries",
                       "title": "Envoy: Latency percentiles (cluster aggregate)",
-                      "description": "p50/p95/p99 latency from each gateway's perspective. Envoy does not emit per-endpoint histograms; this is aggregated across all backend pods. External gateway latency includes the full Cloudflare round-trip to this cluster only when viewed externally; the values here measure just Envoy<->backend-pod time.",
-                      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 51 },
+                      "description": "p50/p95/p99 latency from each gateway's perspective, aggregated across all backend pods (Envoy does not emit per-endpoint histograms). Values measure Envoy<->backend-pod time only. Pair with OTel 'Latency Percentiles' — the gateway adds a small proxy hop, so Envoy values should track slightly above the app's in-handler timings.",
+                      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 53 },
                       "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
                       "targets": [
                         { "expr": "label_replace(label_replace(histogram_quantile(0.50, sum by (le, gateway_envoyproxy_io_owning_gateway_name) (rate(envoy_cluster_upstream_rq_time_bucket{envoy_cluster_name=\"httproute/rollouts-demo/rollouts-demo/rule/0\"}[$__rate_interval]))), \"gw\", \"internal\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway-internal$\"), \"gw\", \"external\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway$\")", "legendFormat": "p50 ({{gw}})", "refId": "A" },
