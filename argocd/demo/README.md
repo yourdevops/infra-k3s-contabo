@@ -38,33 +38,11 @@ Uses [hey](https://github.com/rakyll/hey) with `-disable-keepalive` so new conne
 are distributed evenly across all pods, including ones added by KEDA mid-test.
 
 ```bash
-# Sustained load — 200 concurrent, 5 minutes, no keep-alive
+# Sustained load — 200 concurrent, 10 minutes, no keep-alive
 kubectl run load-test --rm -it --restart=Never \
   --image=williamyeh/hey:latest -n rollouts-demo -- \
-  -c 200 -z 300s -disable-keepalive http://rollouts-demo-internal/color
+  -c 200 -z 600s -disable-keepalive http://rollouts-demo.rollouts-demo.svc.cluster.local/color
 ```
-
-### wrk (for single-pod saturation)
-
-Uses `argoproj/load-tester` image with [wrk](https://github.com/wg/wrk) built in.
-wrk uses persistent connections, so new pods added mid-test won't receive traffic
-until wrk is restarted.
-
-```bash
-# 1. Scale to a single replica (disable autoscaler before that!)
-kubectl argo rollouts set replicas rollouts-demo 1 -n rollouts-demo
-
-# 2. Run wrk — increase -c (10 → 25 → 50 → 100) to find saturation
-kubectl run load-test --rm -it --restart=Never \
-  --image=argoproj/load-tester:latest -n rollouts-demo -- \
-  sh -c 'wrk -t4 -c200 -d600s -s /report.lua http://rollouts-demo-internal/color && cat /report.json'
-
-# 3. Restore replica count
-kubectl argo rollouts set replicas rollouts-demo 5 -n rollouts-demo
-```
-
-`report.json` fields: `requests_per_second`, `errors_ratio`, `latency_avg_ms`, `latency_max_ms`.
-Set KEDA threshold to ~70% of the RPS where latency starts degrading.
 
 ## URLs
 

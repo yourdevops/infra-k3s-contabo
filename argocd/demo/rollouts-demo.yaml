@@ -91,7 +91,7 @@ spec:
         keda:
           enabled: true                   # enable after load-testing single-pod saturation
           minReplicas: 3
-          maxReplicas: 15
+          maxReplicas: 10
           pollingInterval: 15
           cooldownPeriod: 120
           triggers:
