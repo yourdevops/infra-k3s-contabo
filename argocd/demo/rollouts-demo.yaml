@@ -21,7 +21,7 @@ spec:
         # ── Demo toggles ────────────────────────────────────────
         image:
           repository: ghcr.io/yourdevops/rollouts-demo
-          tag: blue                    # blue, green, yellow, purple, orange, red -- all with bad-/slow- prefixes available
+          tag: green                    # blue, green, yellow, purple, orange, red -- all with bad-/slow- prefixes available
           pullPolicy: Always
         hostname: rollouts-demo.yourdevops.me
 
@@ -100,7 +100,7 @@ spec:
         # ── Canary strategy ─────────────────────────────────────
         # https://argo-rollouts.readthedocs.io/en/stable/features/specification/
         canary:
-          dynamicStableScale: true         # scale down stable pods as canary weight increases
+          dynamicStableScale: false         # scale down stable pods as canary weight increases
           # Header-based routing (Firefox -> canary).
           # Firefox gets 100% canary throughout the entire rollout.
           managedRoutes:
