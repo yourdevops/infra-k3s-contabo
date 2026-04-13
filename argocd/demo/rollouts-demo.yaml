@@ -115,29 +115,29 @@ spec:
           managedRoutes:
             - name: header-route
           steps:
-            # PHASE 1 — header-based testing (Firefox -> canary) and automated analysis gate
-            - setCanaryScale:
-                replicas: 1                # spin up a single canary pod
-            - setHeaderRoute:
-                name: header-route         # based on custom header, route traffic to the canary
-                match:
-                  - headerName: User-Agent
-                    headerValue:
-                      regex: ".*Firefox.*"
+            # # PHASE 1 — header-based testing (Firefox -> canary) and automated analysis gate
+            # - setCanaryScale:
+            #     replicas: 1                # spin up a single canary pod
+            # - setHeaderRoute:
+            #     name: header-route         # based on custom header, route traffic to the canary
+            #     match:
+            #       - headerName: User-Agent
+            #         headerValue:
+            #           regex: ".*Firefox.*"
 
-            # Automated gate — probe canary pod directly before shifting traffic
-            - analysis:
-                templates:
-                  - templateName: rollouts-demo-canary-probe
-            - pause:                     # verify canary manually via Firefox, for demo purposes, before proceeding
-                duration: 30s            # OR let it continue unattended after soaking for a couple of minutes
+            # # Automated gate — probe canary pod directly before shifting traffic
+            # - analysis:
+            #     templates:
+            #       - templateName: rollouts-demo-canary-probe
+            # - pause:                     # verify canary manually via Firefox, for demo purposes, before proceeding
+            #     duration: 30s            # OR let it continue unattended after soaking for a couple of minutes
 
             # PHASE 2 — progressive weighted rollout
-            - setWeight: 5
+            # - setWeight: 5
             - setCanaryScale:
                 matchTrafficWeight: true   # canary pods scale with traffic %
-            - pause:
-                duration: 30s
+            # - pause:
+            #     duration: 30s
             - setWeight: 20
             - pause:
                 duration: 30s
