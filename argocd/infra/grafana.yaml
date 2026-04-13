@@ -82,7 +82,7 @@ spec:
                     {
                       "id": 100,
                       "type": "row",
-                      "title": "kube-state-metrics — pod topology (ground truth)",
+                      "title": "kube-state-metrics — pod topology",
                       "collapsed": false,
                       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
                       "panels": []
@@ -240,64 +240,31 @@ spec:
                       "panels": []
                     },
                     {
-                      "id": 20,
-                      "type": "timeseries",
-                      "title": "Envoy: RPS per backend pod",
-                      "description": "Per-endpoint request rate observed at both gateways. During a canary rollout, canary pods appear as new series; the rate split per pod reflects the HTTPRoute backendRefs weights applied by both gateways in lockstep. gw=external is Cloudflare-originated traffic; gw=internal is east-west cluster traffic via the ExternalName shim. Pair with OTel 'RPS per Pod' above — gw=internal + gw=external should sum to the OTel per-pod rate when east-west flows through envoy-gateway-internal. A plain ClusterIP east-west path bypasses HTTPRoute weights and shows up here as a shortfall versus the OTel total.",
-                      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 43 },
-                      "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
-                      "targets": [{ "expr": "label_replace(label_replace(sum by (envoy_endpoint_address, gateway_envoyproxy_io_owning_gateway_name) (rate(envoy_cluster_endpoint_rq_total{envoy_cluster_name=\"httproute/rollouts-demo/rollouts-demo/rule/0\"}[$__rate_interval])), \"gw\", \"internal\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway-internal$\"), \"gw\", \"external\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway$\")", "legendFormat": "{{envoy_endpoint_address}} ({{gw}})", "refId": "A" }],
-                      "fieldConfig": {
-                        "defaults": {
-                          "unit": "reqps",
-                          "min": 0,
-                          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "pointSize": 5, "spanNulls": false, "axisBorderShow": true }
-                        }
-                      }
-                    },
-                    {
                       "id": 21,
                       "type": "timeseries",
-                      "title": "Envoy: Status by code class",
-                      "description": "Response-code class distribution per gateway. Mirrors OTel 'Request Rate by Status' at the routing layer — once east-west flows through envoy-gateway-internal, this captures both external and internal callers without any in-app instrumentation.",
-                      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 43 },
+                      "title": "Envoy: Request Rate by Status",
+                      "description": "Cluster-level request rate by exact response code, split per gateway. Mirrors OTel 'Request Rate by Status'. Envoy's per-endpoint stats don't carry the exact status code, so this is per-gateway aggregate only — version is not available on the x-axis here (see per-pod/per-version panels below that use endpoint success/error counters instead).",
+                      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 43 },
                       "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
-                      "targets": [{ "expr": "label_replace(label_replace(sum by (envoy_response_code_class, gateway_envoyproxy_io_owning_gateway_name) (rate(envoy_cluster_upstream_rq_xx{envoy_cluster_name=\"httproute/rollouts-demo/rollouts-demo/rule/0\"}[$__rate_interval])), \"gw\", \"internal\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway-internal$\"), \"gw\", \"external\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway$\")", "legendFormat": "{{envoy_response_code_class}}xx ({{gw}})", "refId": "A" }],
+                      "targets": [{ "expr": "label_replace(label_replace(sum by (envoy_response_code, gateway_envoyproxy_io_owning_gateway_name) (rate(envoy_cluster_upstream_rq{envoy_cluster_name=\"httproute/rollouts-demo/rollouts-demo/rule/0\"}[$__rate_interval])), \"gw\", \"internal\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway-internal$\"), \"gw\", \"external\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway$\")", "legendFormat": "{{envoy_response_code}} ({{gw}})", "refId": "A" }],
                       "fieldConfig": {
                         "defaults": {
                           "unit": "reqps",
                           "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 15, "pointSize": 5, "spanNulls": false, "stacking": { "mode": "none" }, "axisBorderShow": true }
                         },
                         "overrides": [
-                          { "matcher": { "id": "byRegexp", "options": "^2xx" }, "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }] },
-                          { "matcher": { "id": "byRegexp", "options": "^4xx" }, "properties": [{ "id": "color", "value": { "fixedColor": "yellow", "mode": "fixed" } }] },
-                          { "matcher": { "id": "byRegexp", "options": "^5xx" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] }
+                          { "matcher": { "id": "byRegexp", "options": "^2.." }, "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }] },
+                          { "matcher": { "id": "byRegexp", "options": "^4.." }, "properties": [{ "id": "color", "value": { "fixedColor": "yellow", "mode": "fixed" } }] },
+                          { "matcher": { "id": "byRegexp", "options": "^5.." }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] }
                         ]
-                      }
-                    },
-                    {
-                      "id": 22,
-                      "type": "timeseries",
-                      "title": "Envoy: Error rate per backend pod",
-                      "description": "Per-endpoint error ratio observed at each gateway. envoy_cluster_endpoint_rq_error counts upstream failures (connect failures, 5xx, reset). Parallels OTel 'Error Rate 5xx' above, attributed to the specific pod and gateway that saw the failure.",
-                      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 53 },
-                      "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
-                      "targets": [{ "expr": "label_replace(label_replace(\n  (sum by (envoy_endpoint_address, gateway_envoyproxy_io_owning_gateway_name) (rate(envoy_cluster_endpoint_rq_error{envoy_cluster_name=\"httproute/rollouts-demo/rollouts-demo/rule/0\"}[$__rate_interval]))\n   /\n   sum by (envoy_endpoint_address, gateway_envoyproxy_io_owning_gateway_name) (rate(envoy_cluster_endpoint_rq_total{envoy_cluster_name=\"httproute/rollouts-demo/rollouts-demo/rule/0\"}[$__rate_interval]))),\n  \"gw\", \"internal\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway-internal$\"),\n  \"gw\", \"external\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway$\")", "legendFormat": "{{envoy_endpoint_address}} ({{gw}})", "refId": "A" }],
-                      "fieldConfig": {
-                        "defaults": {
-                          "unit": "percentunit",
-                          "min": 0,
-                          "max": 1,
-                          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "pointSize": 5, "spanNulls": false, "axisBorderShow": true }
-                        }
                       }
                     },
                     {
                       "id": 23,
                       "type": "timeseries",
-                      "title": "Envoy: Latency percentiles (cluster aggregate)",
-                      "description": "p50/p95/p99 latency from each gateway's perspective, aggregated across all backend pods (Envoy does not emit per-endpoint histograms). Values measure Envoy<->backend-pod time only. Pair with OTel 'Latency Percentiles' — the gateway adds a small proxy hop, so Envoy values should track slightly above the app's in-handler timings.",
-                      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 53 },
+                      "title": "Envoy: Latency Percentiles (cluster aggregate)",
+                      "description": "p50/p95/p99 latency per gateway, aggregated across all backend pods. Mirrors OTel 'Latency Percentiles' — but Envoy does not emit per-endpoint histograms, so version split (visible in OTel) is not reproducible here. Envoy values include the proxy hop, so they track slightly above the OTel in-handler values.",
+                      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 43 },
                       "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
                       "targets": [
                         { "expr": "label_replace(label_replace(histogram_quantile(0.50, sum by (le, gateway_envoyproxy_io_owning_gateway_name) (rate(envoy_cluster_upstream_rq_time_bucket{envoy_cluster_name=\"httproute/rollouts-demo/rollouts-demo/rule/0\"}[$__rate_interval]))), \"gw\", \"internal\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway-internal$\"), \"gw\", \"external\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway$\")", "legendFormat": "p50 ({{gw}})", "refId": "A" },
@@ -307,6 +274,86 @@ spec:
                       "fieldConfig": {
                         "defaults": {
                           "unit": "ms",
+                          "min": 0,
+                          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "pointSize": 5, "spanNulls": false, "axisBorderShow": true }
+                        }
+                      }
+                    },
+                    {
+                      "id": 24,
+                      "type": "timeseries",
+                      "title": "Envoy: In-Flight per version",
+                      "description": "Per-version in-flight requests, assembled from envoy_cluster_endpoint_rq_active (a per-endpoint gauge) joined through kube_pod_info (pod_ip → pod uid) and kube_pod_labels (uid → version). Mirrors OTel 'In-Flight Requests'. The join chain is: envoy endpoint series → pod uid → version label.",
+                      "gridPos": { "h": 10, "w": 8, "x": 0, "y": 53 },
+                      "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+                      "targets": [{ "expr": "label_replace(label_replace(\n  sum by (label_app_kubernetes_io_version, gateway_envoyproxy_io_owning_gateway_name) (\n    envoy_cluster_endpoint_rq_active{envoy_cluster_name=\"httproute/rollouts-demo/rollouts-demo/rule/0\"}\n    * on (envoy_endpoint_address) group_left(uid)\n      label_replace(kube_pod_info{exported_namespace=\"rollouts-demo\"}, \"envoy_endpoint_address\", \"$1:8080\", \"pod_ip\", \"(.+)\")\n    * on (uid) group_left(label_app_kubernetes_io_version)\n      kube_pod_labels{exported_namespace=\"rollouts-demo\", label_app_kubernetes_io_name=\"rollouts-demo\"}\n  ),\n  \"gw\", \"internal\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway-internal$\"),\n  \"gw\", \"external\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway$\")", "legendFormat": "{{label_app_kubernetes_io_version}} ({{gw}})", "refId": "A" }],
+                      "fieldConfig": {
+                        "defaults": {
+                          "min": 0,
+                          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 20, "pointSize": 5, "spanNulls": false, "axisBorderShow": true }
+                        }
+                      }
+                    },
+                    {
+                      "id": 22,
+                      "type": "timeseries",
+                      "title": "Envoy: Error Rate per version (5xx + upstream failures)",
+                      "description": "Per-version error ratio. envoy_cluster_endpoint_rq_error is broader than OTel's 'Error Rate 5xx': it counts upstream 5xx, connect failures, resets, and timeouts — i.e., every case where Envoy failed to get a normal response from the pod. For a rollout gate this is operationally stronger than app-reported 5xx because it also catches pods that failed to accept traffic at all. Version comes from the kube-state-metrics join.",
+                      "gridPos": { "h": 10, "w": 8, "x": 8, "y": 53 },
+                      "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+                      "targets": [{ "expr": "label_replace(label_replace(\n  (\n    sum by (label_app_kubernetes_io_version, gateway_envoyproxy_io_owning_gateway_name) (\n      rate(envoy_cluster_endpoint_rq_error{envoy_cluster_name=\"httproute/rollouts-demo/rollouts-demo/rule/0\"}[$__rate_interval])\n      * on (envoy_endpoint_address) group_left(uid)\n        label_replace(kube_pod_info{exported_namespace=\"rollouts-demo\"}, \"envoy_endpoint_address\", \"$1:8080\", \"pod_ip\", \"(.+)\")\n      * on (uid) group_left(label_app_kubernetes_io_version)\n        kube_pod_labels{exported_namespace=\"rollouts-demo\", label_app_kubernetes_io_name=\"rollouts-demo\"}\n    )\n    /\n    sum by (label_app_kubernetes_io_version, gateway_envoyproxy_io_owning_gateway_name) (\n      rate(envoy_cluster_endpoint_rq_total{envoy_cluster_name=\"httproute/rollouts-demo/rollouts-demo/rule/0\"}[$__rate_interval])\n      * on (envoy_endpoint_address) group_left(uid)\n        label_replace(kube_pod_info{exported_namespace=\"rollouts-demo\"}, \"envoy_endpoint_address\", \"$1:8080\", \"pod_ip\", \"(.+)\")\n      * on (uid) group_left(label_app_kubernetes_io_version)\n        kube_pod_labels{exported_namespace=\"rollouts-demo\", label_app_kubernetes_io_name=\"rollouts-demo\"}\n    )\n  ),\n  \"gw\", \"internal\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway-internal$\"),\n  \"gw\", \"external\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway$\")", "legendFormat": "{{label_app_kubernetes_io_version}} ({{gw}})", "refId": "A" }],
+                      "fieldConfig": {
+                        "defaults": {
+                          "unit": "percentunit",
+                          "min": 0,
+                          "max": 1,
+                          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 20, "pointSize": 5, "spanNulls": false, "axisBorderShow": true }
+                        }
+                      }
+                    },
+                    {
+                      "id": 25,
+                      "type": "timeseries",
+                      "title": "Envoy: 4xx Rate (cluster aggregate)",
+                      "description": "Per-gateway 4xx ratio from envoy_cluster_upstream_rq_xx. Mirrors OTel 'Error Rate 4xx', but Envoy does NOT tag 4xx to an endpoint (4xx is client fault, not upstream fault in Envoy's taxonomy), so per-version split is unavailable — this panel is cluster-level only.",
+                      "gridPos": { "h": 10, "w": 8, "x": 16, "y": 53 },
+                      "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+                      "targets": [{ "expr": "label_replace(label_replace(\n  sum by (gateway_envoyproxy_io_owning_gateway_name) (rate(envoy_cluster_upstream_rq_xx{envoy_cluster_name=\"httproute/rollouts-demo/rollouts-demo/rule/0\", envoy_response_code_class=\"4\"}[$__rate_interval]))\n  /\n  sum by (gateway_envoyproxy_io_owning_gateway_name) (rate(envoy_cluster_upstream_rq_completed{envoy_cluster_name=\"httproute/rollouts-demo/rollouts-demo/rule/0\"}[$__rate_interval])),\n  \"gw\", \"internal\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway-internal$\"),\n  \"gw\", \"external\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway$\")", "legendFormat": "4xx ({{gw}})", "refId": "A" }],
+                      "fieldConfig": {
+                        "defaults": {
+                          "unit": "percentunit",
+                          "min": 0,
+                          "max": 1,
+                          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 20, "pointSize": 5, "spanNulls": false, "axisBorderShow": true }
+                        }
+                      }
+                    },
+                    {
+                      "id": 20,
+                      "type": "timeseries",
+                      "title": "Envoy: RPS per Pod",
+                      "description": "Per-pod request rate enriched with version via the kube-state-metrics join. Mirrors OTel 'RPS per Pod'. During canary, the per-pod rate reflects HTTPRoute weights divided by pod count, so stable and canary pods will sit at different RPS levels even at 50/50 weight if their replica counts differ (e.g., 3×stable at 15 rps vs 2×canary at 22 rps = 45/45 total).",
+                      "gridPos": { "h": 10, "w": 12, "x": 0, "y": 63 },
+                      "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+                      "targets": [{ "expr": "label_replace(label_replace(\n  sum by (exported_pod, label_app_kubernetes_io_version, gateway_envoyproxy_io_owning_gateway_name) (\n    rate(envoy_cluster_endpoint_rq_total{envoy_cluster_name=\"httproute/rollouts-demo/rollouts-demo/rule/0\"}[$__rate_interval])\n    * on (envoy_endpoint_address) group_left(uid, exported_pod)\n      label_replace(kube_pod_info{exported_namespace=\"rollouts-demo\"}, \"envoy_endpoint_address\", \"$1:8080\", \"pod_ip\", \"(.+)\")\n    * on (uid) group_left(label_app_kubernetes_io_version)\n      kube_pod_labels{exported_namespace=\"rollouts-demo\", label_app_kubernetes_io_name=\"rollouts-demo\"}\n  ),\n  \"gw\", \"internal\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway-internal$\"),\n  \"gw\", \"external\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway$\")", "legendFormat": "{{exported_pod}} [{{label_app_kubernetes_io_version}}] ({{gw}})", "refId": "A" }],
+                      "fieldConfig": {
+                        "defaults": {
+                          "unit": "reqps",
+                          "min": 0,
+                          "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "pointSize": 5, "spanNulls": false, "axisBorderShow": true }
+                        }
+                      }
+                    },
+                    {
+                      "id": 26,
+                      "type": "timeseries",
+                      "title": "Envoy: Active requests per Pod",
+                      "description": "Per-pod in-flight gauge — the closest Envoy offers to 'p99 Latency per Pod'. Envoy emits no per-endpoint latency histograms, so direct p99-per-pod is unavailable; however, a pod with elevated latency accumulates more concurrent in-flight requests (Little's law), making this a usable saturation proxy for spotting a slow pod during rollouts.",
+                      "gridPos": { "h": 10, "w": 12, "x": 12, "y": 63 },
+                      "datasource": { "type": "prometheus", "uid": "victoria-metrics" },
+                      "targets": [{ "expr": "label_replace(label_replace(\n  sum by (exported_pod, label_app_kubernetes_io_version, gateway_envoyproxy_io_owning_gateway_name) (\n    envoy_cluster_endpoint_rq_active{envoy_cluster_name=\"httproute/rollouts-demo/rollouts-demo/rule/0\"}\n    * on (envoy_endpoint_address) group_left(uid, exported_pod)\n      label_replace(kube_pod_info{exported_namespace=\"rollouts-demo\"}, \"envoy_endpoint_address\", \"$1:8080\", \"pod_ip\", \"(.+)\")\n    * on (uid) group_left(label_app_kubernetes_io_version)\n      kube_pod_labels{exported_namespace=\"rollouts-demo\", label_app_kubernetes_io_name=\"rollouts-demo\"}\n  ),\n  \"gw\", \"internal\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway-internal$\"),\n  \"gw\", \"external\", \"gateway_envoyproxy_io_owning_gateway_name\", \"^envoy-gateway$\")", "legendFormat": "{{exported_pod}} [{{label_app_kubernetes_io_version}}] ({{gw}})", "refId": "A" }],
+                      "fieldConfig": {
+                        "defaults": {
                           "min": 0,
                           "custom": { "drawStyle": "line", "lineWidth": 2, "fillOpacity": 10, "pointSize": 5, "spanNulls": false, "axisBorderShow": true }
                         }
