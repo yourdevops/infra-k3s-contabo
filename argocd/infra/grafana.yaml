@@ -52,6 +52,12 @@ spec:
                 access: proxy
                 isDefault: true
                 editable: false
+              # - name: Loki
+              #   type: loki
+              #   uid: loki
+              #   url: http://grafana-loki.grafana-loki.svc.cluster.local:3100
+              #   access: proxy
+              #   editable: false
 
         dashboardProviders:
           dashboardproviders.yaml:

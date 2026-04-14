@@ -1,0 +1,81 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: grafana-loki
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://grafana.github.io/helm-charts
+    chart: loki
+    targetRevision: "6.55.0"
+    helm:
+      valuesObject:
+        deploymentMode: SingleBinary
+
+        loki:
+          auth_enabled: false
+          commonConfig:
+            path_prefix: /var/loki
+            replication_factor: 1
+          storage:
+            type: filesystem
+          schemaConfig:
+            configs:
+              - from: "2024-04-01"
+                store: tsdb
+                object_store: filesystem
+                schema: v13
+                index:
+                  prefix: index_
+                  period: 24h
+          limits_config:
+            reject_old_samples: true
+            reject_old_samples_max_age: 168h
+            volume_enabled: true
+
+        singleBinary:
+          replicas: 1
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "2"
+              memory: 1Gi
+          persistence:
+            enabled: true
+            size: 10Gi
+          # Single node — no anti-affinity needed
+          affinity: {}
+
+        # Disable components not used in SingleBinary mode
+        gateway:
+          enabled: false
+        chunksCache:
+          enabled: false
+        resultsCache:
+          enabled: false
+
+        # Disable read/write/backend (SimpleScalable components)
+        write:
+          replicas: 0
+        read:
+          replicas: 0
+        backend:
+          replicas: 0
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: grafana-loki
+  syncPolicy:
+    automated:
+      selfHeal: false
+      prune: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
