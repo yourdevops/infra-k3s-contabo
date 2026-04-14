@@ -148,8 +148,7 @@ spec:
                 duration: 30s
 
   ignoreDifferences:
-    - group: ""
-      kind: Service
+    - kind: Service
       jqPathExpressions:
         - .spec.selector["rollouts-pod-template-hash"]
     - group: argoproj.io
@@ -163,7 +162,6 @@ spec:
     namespace: rollouts-demo
   syncPolicy:
     automated:
-      selfHeal: false
       prune: true
     syncOptions:
       - CreateNamespace=true
