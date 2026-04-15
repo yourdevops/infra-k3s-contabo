@@ -1,0 +1,20 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# ConfigMaps land in the grafana namespace where the Grafana sidecar runs.
+namespace: grafana
+
+# The Grafana Helm chart's dashboards sidecar watches for ConfigMaps with
+# label grafana_dashboard=1 and mounts their data keys as dashboard files.
+# Keep content-hash suffixes off so the Application isn't churning ConfigMaps
+# on every JSON edit (sidecar picks up data changes live either way).
+generatorOptions:
+  disableNameSuffixHash: true
+  labels:
+    grafana_dashboard: "1"
+
+configMapGenerator:
+  - name: dashboard-canary-demo
+    files:
+      - canary-demo.json

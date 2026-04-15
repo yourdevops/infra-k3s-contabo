@@ -1,0 +1,81 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: grafana
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://grafana-community.github.io/helm-charts
+    chart: grafana
+    targetRevision: "11.6.0"
+    helm:
+      valuesObject:
+        replicas: 1
+
+        # deploymentStrategy:
+        #   type: Recreate
+
+        resources:
+          requests:
+            cpu: 100m
+            memory: 512Mi
+          limits:
+            cpu: "1"
+            memory: 1Gi
+
+        persistence:
+          enabled: true
+          size: 5Gi
+
+        initChownData:
+          enabled: false
+
+        grafana.ini:
+          auth.anonymous:
+            enabled: true
+            org_role: Viewer
+
+        datasources:
+          datasources.yaml:
+            apiVersion: 1
+            datasources:
+              - name: VictoriaMetrics
+                type: prometheus
+                uid: victoria-metrics
+                url: http://victoria-metrics-server.victoria-metrics.svc.cluster.local:8428
+                access: proxy
+                isDefault: true
+                editable: false
+              - name: Loki
+                type: loki
+                uid: loki
+                url: http://grafana-loki.grafana-loki.svc.cluster.local:3100
+                access: proxy
+                editable: false
+
+        # Dashboards are delivered at runtime by the Grafana sidecar container,
+        # which watches ConfigMaps labeled grafana_dashboard=1 in the release
+        # namespace. Dashboard sources live under
+        # argocd/infra/observability/grafana-dashboards/ and are applied by
+        # the grafana-dashboards ArgoCD Application. No dashboardProviders or
+        # inline dashboards block is needed — the sidecar wires its own provider.
+        sidecar:
+          dashboards:
+            enabled: true
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: grafana
+  syncPolicy:
+    automated:
+      selfHeal: false
+      prune: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

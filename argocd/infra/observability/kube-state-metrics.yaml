@@ -22,22 +22,38 @@ spec:
             memory: 32Mi
           limits:
             cpu: 100m
-            memory: 128Mi
+            memory: 256Mi
 
         # Only monitor resource types we actually use
         collectors:
-          - pods
-          - replicasets
-          - namespaces
-          - nodes
+          - configmaps
+          - cronjobs
+          - daemonsets
+          - deployments
+          - endpointslices
           - horizontalpodautoscalers
           - jobs
+          - leases
+          - limitranges
+          - mutatingwebhookconfigurations
+          - namespaces
+          - networkpolicies
+          - nodes
+          - persistentvolumeclaims
+          - persistentvolumes
+          - poddisruptionbudgets
+          - pods
+          - replicasets
+          - resourcequotas
+          - services
           - statefulsets
-          - daemonsets
+          - storageclasses
+          - volumeattachments
 
         # Expose pod labels as metric labels so we can group by version
         metricLabelsAllowlist:
           - pods=[app.kubernetes.io/version,app.kubernetes.io/name]
+          - services=[app.kubernetes.io/name]
 
         # Ensure VictoriaMetrics auto-discovers via kubernetes_sd
         podAnnotations:

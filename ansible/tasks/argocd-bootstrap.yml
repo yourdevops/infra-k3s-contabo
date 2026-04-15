@@ -34,6 +34,14 @@
           path: argocd/
           directory:
             recurse: true
+            # Repo-wide conventions for the root walker:
+            # - kustomization.yaml belongs to a kustomize child tree (consumed
+            #   by its own Application), never applied by the root walker.
+            # - *.json files in this repo are data content (dashboards,
+            #   configmap sources), not Kubernetes manifests — manifests are
+            #   always YAML here. This keeps the walker forward-compatible
+            #   with new kustomize sub-apps without touching this exclude.
+            exclude: "{**/kustomization.yaml,**/*.json}"
         destination:
           server: https://kubernetes.default.svc
         syncPolicy:
