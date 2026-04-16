@@ -49,7 +49,7 @@ spec:
           sectionName: https
           # East-west: attach HTTPRoute to the internal Envoy Gateway too
           # so in-cluster callers get the same weighted splits + per-pod
-          # metrics as external traffic.  See ADR-014.
+          # metrics as external traffic.  See ADR-016.
           internal:
             enabled: true
             name: envoy-gateway-internal

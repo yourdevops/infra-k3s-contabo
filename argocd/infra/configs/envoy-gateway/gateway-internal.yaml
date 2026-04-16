@@ -1,7 +1,6 @@
 ---
 # Internal Envoy Gateway — east-west (service-to-service) L7 router.
-# See ADR-014 for rationale. Runs a separate Envoy deployment from the
-# external gateway so per-endpoint metrics and failure domains are isolated.
+# Runs a separate Envoy deployment from the external gateway so per-endpoint metrics and failure domains are isolated.
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: EnvoyProxy
 metadata:
@@ -12,6 +11,9 @@ metadata:
 spec:
   telemetry:
     metrics:
+      # Emit per-pod metrics (`envoy_cluster_endpoint_upstream_rq_*`) so that
+      # short-lived canary pods stay observable at the gateway level, even if
+      # they die before the app's OTel SDK gets a chance to export.
       enablePerEndpointStats: true
   provider:
     type: Kubernetes

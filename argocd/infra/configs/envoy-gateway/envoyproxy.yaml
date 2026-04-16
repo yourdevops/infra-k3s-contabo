@@ -1,4 +1,8 @@
 ---
+# Public Envoy Gateway — north-south (internet-facing) L7 router.
+# Runs a separate Envoy deployment from the internal gateway so per-endpoint metrics and failure domains are isolated.
+# Attached to every Gateway via the GatewayClass parametersRef
+# (see gatewayclass.yaml), unless a Gateway overrides with its own EnvoyProxy.
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: EnvoyProxy
 metadata:
@@ -31,3 +35,5 @@ spec:
             prometheus.io/scrape: "true"
             prometheus.io/port: "19001"
             prometheus.io/path: "/stats/prometheus"
+      envoyService:
+        type: LoadBalancer

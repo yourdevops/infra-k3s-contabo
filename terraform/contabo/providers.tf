@@ -6,6 +6,10 @@ terraform {
       source  = "contabo/contabo"
       version = ">= 0.1.32"
     }
+    http = {
+      source  = "hashicorp/http"
+      version = "~> 3.4"
+    }
   }
 
   cloud {

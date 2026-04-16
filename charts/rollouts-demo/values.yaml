@@ -13,7 +13,7 @@ gateway:
   namespace: ""
   sectionName: ""
   # Attach the HTTPRoute to a second (internal) Gateway for east-west traffic.
-  # See ADR-014. Enabling this also renders an ExternalName shim Service in
+  # See ADR-016. Enabling this also renders an ExternalName shim Service in
   # the release namespace so callers can use the native cluster DNS name
   # `<release>.<namespace>.svc.cluster.local` and have requests forwarded
   # to the internal Envoy Gateway (which splits traffic by the same weights
