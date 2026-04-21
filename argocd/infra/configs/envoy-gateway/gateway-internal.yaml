@@ -60,7 +60,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "3"
 spec:
-  gatewayClassName: envoy-gateway
+  gatewayClassName: envoy-gateway-internal
   infrastructure:
     parametersRef:
       group: gateway.envoyproxy.io
