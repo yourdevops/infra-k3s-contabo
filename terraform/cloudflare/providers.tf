@@ -13,7 +13,6 @@ terraform {
   }
 
   cloud {
-    # 
     organization = "yourdevops"
     workspaces {
       name = "cloudflare"
