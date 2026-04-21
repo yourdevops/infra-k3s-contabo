@@ -44,7 +44,7 @@ spec:
         # ── Gateway API routing ─────────────────────────────────
         gateway:
           enabled: true
-          name: envoy-gateway
+          name: envoy-gateway-public
           namespace: envoy-gateway-system
           sectionName: https
           # East-west: attach HTTPRoute to the internal Envoy Gateway too

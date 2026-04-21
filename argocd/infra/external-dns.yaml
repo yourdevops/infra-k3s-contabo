@@ -39,6 +39,7 @@ spec:
             cpu: 100m
             memory: 128Mi
         extraArgs:
+          gateway-label-filter: scope=public
           cloudflare-proxied:
   destination:
     server: https://kubernetes.default.svc
