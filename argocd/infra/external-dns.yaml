@@ -30,7 +30,7 @@ spec:
         domainFilters:
           - yourdevops.me
         policy: sync
-        logLevel: info
+        logLevel: debug
         txtOwnerId: k3s-contabo
         resources:
           requests:

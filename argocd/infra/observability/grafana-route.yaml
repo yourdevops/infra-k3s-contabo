@@ -6,6 +6,7 @@ metadata:
   namespace: grafana
   annotations:
     argocd.argoproj.io/sync-wave: "3"
+    external-dns.alpha.kubernetes.io/controller: ignore-until-cutover
 spec:
   parentRefs:
     - group: gateway.networking.k8s.io
@@ -15,6 +16,7 @@ spec:
       sectionName: https
   hostnames:
     - grafana.yourdevops.me
+    - test.yourdevops.me
   rules:
     - matches:
         - path:
