@@ -15,7 +15,7 @@ spec:
       sectionName: https
   hostnames:
     - argocd.yourdevops.me
-    - test-ext-dns.yourdevops.me
+    - test-ext-dns2.yourdevops.me
   rules:
     - matches:
         - path:
