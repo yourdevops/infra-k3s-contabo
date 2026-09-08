@@ -41,8 +41,15 @@ spec:
           enabled: true
           # internalTrafficPolicy: Local is set automatically for DaemonSet
 
-        # Disable unused ports (Jaeger, Zipkin enabled by default)
+        # Disable unused ports (Jaeger, Zipkin enabled by default).
+        # OTLP ports are reachable only via the ClusterIP Service: the chart
+        # binds them on the node (hostPort) by default in daemonset mode, which
+        # exposes 4317/4318 on the public node IP.
         ports:
+          otlp:
+            hostPort: null
+          otlp-http:
+            hostPort: null
           jaeger-compact:
             enabled: false
           jaeger-thrift:

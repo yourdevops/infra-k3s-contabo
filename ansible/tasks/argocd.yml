@@ -10,6 +10,7 @@
     chart_ref: argo/argo-cd
     release_namespace: argocd
     chart_version: "{{ argocd_chart_version }}"
+    update_repo_cache: true  # refresh the index so newly pinned chart versions resolve
     create_namespace: true
     kubeconfig: "{{ kubeconfig }}"
     wait: true
@@ -19,7 +20,7 @@
         cm:
           exec.enabled: true
         params:
-          server.insecure: true  # TLS terminates at Cloudflare edge
+          server.insecure: true  # TLS terminates at Envoy Gateway; in-cluster hop is plain HTTP
         rbac:
           policy.csv: |
             p, role:admin, exec, create, */*, allow
@@ -45,7 +46,8 @@
             - name: rollout-extension
               env:
                 - name: EXTENSION_URL
-                  value: https://github.com/argoproj-labs/rollout-extension/releases/download/v0.3.7/extension.tar
+                  # v0.4.0+ is built for the React 19 UI shipped with Argo CD 3.5
+                  value: https://github.com/argoproj-labs/rollout-extension/releases/download/v0.4.0/extension.tar
       repoServer:
         resources:
           requests:
@@ -79,10 +81,6 @@
             cpu: "1"
             memory: 1Gi
       dex:
-        resources:
-          requests:
-            cpu: 10m
-            memory: 32Mi
-          limits:
-            cpu: "1"
-            memory: 1Gi
+        # No SSO is configured; local admin login only. Dex would be an idle
+        # OIDC server reachable from argocd-server for nothing.
+        enabled: false

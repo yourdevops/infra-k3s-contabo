@@ -7,6 +7,9 @@ This repo is publicly available and represents IaC for a single-node k3s cluster
 - **Ansible** (`ansible/`) — provisions VM, installs k3s, Helm, ArgoCD
 - **Terraform** (`terraform/`) — three TFC workspaces: `tfc-workspace-management/`, `cloudflare/`, `contabo/`
 - **ArgoCD** (`argocd/`) — GitOps-managed cluster workloads (recursive app-of-apps, prune enabled, selfHeal disabled)
+  - `infra/` — platform Applications; `infra/configs/` raw Gateway API and cert-manager manifests; `infra/observability/` metrics, logs, Grafana
+  - `demo/` — Argo Rollouts demo Application and cheatsheet
+- **Charts** (`charts/`) — in-repo Helm charts (`rollouts-demo`)
 
 ## Commands
 

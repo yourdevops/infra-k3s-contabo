@@ -1,8 +1,7 @@
 ---
 # Public Envoy Gateway — north-south (internet-facing) L7 router.
 # Runs a separate Envoy deployment from the internal gateway so per-endpoint metrics and failure domains are isolated.
-# Attached to every Gateway via the GatewayClass parametersRef
-# (see gatewayclass.yaml), unless a Gateway overrides with its own EnvoyProxy.
+# The GatewayClass below attaches this EnvoyProxy to the Gateway via parametersRef.
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: EnvoyProxy
 metadata:
